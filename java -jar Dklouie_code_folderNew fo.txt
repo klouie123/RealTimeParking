@@ -211,3 +211,6 @@ public class MapViewModel : BaseViewModel
 
             return Ok(parks);
         }
+
+
+dotnet user-secrets set "GoogleMapsApiKey" "AIzaSyDLhNQyvgxJjwar4jgFXv6-OzKYd8HyNtk"
