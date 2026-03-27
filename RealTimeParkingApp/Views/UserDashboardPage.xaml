@@ -29,6 +29,29 @@
                 <Button Text="Logout" Clicked="LogoutButton_Clicked"/>
             </StackLayout>
         </Grid>
+
+        <Frame x:Name="NavigationBanner"
+       IsVisible="False"
+       BackgroundColor="#E8F5E9"
+       CornerRadius="16"
+       Padding="10"
+       Margin="10"
+       VerticalOptions="End">
+
+            <Grid ColumnDefinitions="*,Auto">
+                <VerticalStackLayout>
+                    <Label Text="You are navigating"
+                   FontAttributes="Bold" />
+                    <Label x:Name="NavigationBannerLabel"
+                   Text="Tap to return to navigation"
+                   FontSize="12" />
+                </VerticalStackLayout>
+
+                <Button Grid.Column="1"
+                Text="Open"
+                Clicked="OpenNavigationBanner_Clicked" />
+            </Grid>
+        </Frame>
     </Grid>
 
 </ContentPage>

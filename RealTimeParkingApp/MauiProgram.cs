@@ -32,6 +32,8 @@ namespace RealTimeParkingApp
             builder.Services.AddSingleton<LocationService>();
             builder.Services.AddSingleton<MapViewModel>();
             builder.Services.AddSingleton<MapPage>();
+            builder.Services.AddSingleton<NavigationStateService>();
+            builder.Services.AddSingleton<NavigationMapPage>();
 
             var app = builder.Build();
 

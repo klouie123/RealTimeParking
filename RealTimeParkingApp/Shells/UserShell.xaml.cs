@@ -9,5 +9,6 @@ public partial class UserShell : Shell
 		InitializeComponent();
 
         Routing.RegisterRoute(nameof(MapPage), typeof(MapPage));
+        Routing.RegisterRoute(nameof(NavigationMapPage), typeof(NavigationMapPage));
     }
 }

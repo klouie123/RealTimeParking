@@ -1,11 +1,13 @@
 using System.Collections.Specialized;
 using System.Diagnostics;
+using System.Globalization;
 using System.Net.Http;
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Maui.Controls.Maps;
 using Microsoft.Maui.Maps;
 using RealTimeParkingApp.Models;
+using RealTimeParkingApp.Services;
 using RealTimeParkingApp.ViewModels;
 
 namespace RealTimeParkingApp.Views;
@@ -21,20 +23,21 @@ public partial class MapPage : ContentPage
     private double userLat;
     private double userLng;
 
-    private readonly string googleMapsApiKey;
-
     public string Lat { get; set; }
     public string Lng { get; set; }
 
     private bool _initialized;
 
-    public MapPage(MapViewModel viewModel, IConfiguration configuration)
+    private readonly NavigationStateService _navigationState;
+
+    public MapPage(MapViewModel viewModel, IConfiguration configuration, NavigationStateService navigationState)
     {
         InitializeComponent();
+
         vm = viewModel;
         BindingContext = vm;
 
-        googleMapsApiKey = configuration["GoogleMapsApiKey"] ?? "";
+        _navigationState = navigationState;
 
         map.HandlerChanged += Map_HandlerChanged;
         vm.Parkings.CollectionChanged += Parkings_CollectionChanged;
@@ -44,22 +47,18 @@ public partial class MapPage : ContentPage
     {
         base.OnAppearing();
 
-        if (_initialized)
-            return;
+        // RESET EVERY TIME
+        ResetMap();
 
         if (!string.IsNullOrWhiteSpace(Lat) &&
             !string.IsNullOrWhiteSpace(Lng) &&
             double.TryParse(Lat, out var lat) &&
             double.TryParse(Lng, out var lng))
         {
-            _initialized = true;
             await InitializeAsync(lat, lng);
         }
     }
 
-    /// <summary>
-    /// Set user's location and reload nearby parking
-    /// </summary>
     public async Task SetUserLocationAsync(double lat, double lng)
     {
         userLat = lat;
@@ -107,7 +106,8 @@ public partial class MapPage : ContentPage
 
     private void LoadMapPins()
     {
-        if (!isMapReady || vm.Parkings.Count == 0) return;
+        if (!isMapReady)
+            return;
 
         MainThread.BeginInvokeOnMainThread(() =>
         {
@@ -123,26 +123,45 @@ public partial class MapPage : ContentPage
                     Label = $"{p.Name} ({p.Distance:F2} km)",
                     Location = new Location(p.Latitude, p.Longitude)
                 };
-                pin.MarkerClicked += (s, args) => SelectParkingAsync(p);
+
+                pin.MarkerClicked += (s, args) =>
+                {
+                    SelectParkingAsync(p);
+                };
+
                 map.Pins.Add(pin);
             }
+
+            // optional: show user pin
+            //if (userLat != 0 && userLng != 0)
+            //{
+            //    map.Pins.Add(new Pin
+            //    {
+            //        Label = "You are here",
+            //        Location = new Location(userLat, userLng)
+            //    });
+            //}
         });
     }
 
     private async void SelectParkingAsync(ParkingLocation p)
     {
         vm.SelectedParking = p;
+
         var destination = new Location(p.Latitude, p.Longitude);
 
-        map.MoveToRegion(MapSpan.FromCenterAndRadius(destination, Distance.FromKilometers(1)));
-        await DrawRouteGoogleAsync(destination);
+        map.MoveToRegion(MapSpan.FromCenterAndRadius(
+            destination,
+            Distance.FromKilometers(1)));
+
+        await DrawRouteOsrmAsync(destination);
     }
 
-    private async Task DrawRouteGoogleAsync(Location destination)
+    private async Task DrawRouteOsrmAsync(Location destination)
     {
         try
         {
-            Debug.WriteLine(" DRAW ROUTE FUNCTION CALLED");
+            Debug.WriteLine("OSRM ROUTE FUNCTION CALLED");
 
             if (userLat == 0 || userLng == 0)
             {
@@ -150,41 +169,35 @@ public partial class MapPage : ContentPage
                 return;
             }
 
-            if (string.IsNullOrEmpty(googleMapsApiKey))
-            {
-                await DisplayAlert("DEBUG", $"KEY LENGTH: {googleMapsApiKey.Length}", "OK");
-                await DisplayAlert("Error", "API Key missing", "OK");
-                return;
-            }
+            string startLng = userLng.ToString(CultureInfo.InvariantCulture);
+            string startLat = userLat.ToString(CultureInfo.InvariantCulture);
+            string endLng = destination.Longitude.ToString(CultureInfo.InvariantCulture);
+            string endLat = destination.Latitude.ToString(CultureInfo.InvariantCulture);
 
-            var origin = $"{userLat},{userLng}";
-            var dest = $"{destination.Latitude},{destination.Longitude}";
-            var url = $"https://maps.googleapis.com/maps/api/directions/json?origin={origin}&destination={dest}&key={googleMapsApiKey}&mode=driving";
+            string url =
+                $"https://router.project-osrm.org/route/v1/driving/" +
+                $"{startLng},{startLat};{endLng},{endLat}" +
+                $"?overview=full&geometries=geojson";
 
             using var client = new HttpClient();
             var response = await client.GetStringAsync(url);
 
+            Debug.WriteLine("==== OSRM RESPONSE ====");
             Debug.WriteLine(response);
-
-            await DisplayAlert("Google API", response.Substring(0, 200), "OK");
+            Debug.WriteLine("==== END OSRM RESPONSE ====");
 
             using var json = JsonDocument.Parse(response);
-            var routes = json.RootElement.GetProperty("routes");
 
+            var routes = json.RootElement.GetProperty("routes");
             if (routes.GetArrayLength() == 0)
             {
                 await DisplayAlert("No Route", "No route found", "OK");
                 return;
             }
 
-            var points = routes[0]
-                .GetProperty("overview_polyline")
-                .GetProperty("points")
-                .GetString();
-
-            if (string.IsNullOrEmpty(points)) return;
-
-            var locations = DecodePolyline(points);
+            var coordinates = routes[0]
+                .GetProperty("geometry")
+                .GetProperty("coordinates");
 
             if (routeLine != null)
                 map.MapElements.Remove(routeLine);
@@ -195,19 +208,39 @@ public partial class MapPage : ContentPage
                 StrokeWidth = 5
             };
 
-            foreach (var loc in locations)
-                routeLine.Geopath.Add(loc);
+            double minLat = double.MaxValue;
+            double maxLat = double.MinValue;
+            double minLng = double.MaxValue;
+            double maxLng = double.MinValue;
+
+            foreach (var point in coordinates.EnumerateArray())
+            {
+                double lng = point[0].GetDouble();
+                double lat = point[1].GetDouble();
+
+                routeLine.Geopath.Add(new Location(lat, lng));
+
+                if (lat < minLat) minLat = lat;
+                if (lat > maxLat) maxLat = lat;
+                if (lng < minLng) minLng = lng;
+                if (lng > maxLng) maxLng = lng;
+            }
 
             map.MapElements.Add(routeLine);
+
+            var center = new Location((minLat + maxLat) / 2, (minLng + maxLng) / 2);
+            var latSpan = Math.Max(0.01, maxLat - minLat);
+            var lngSpan = Math.Max(0.01, maxLng - minLng);
+
+            map.MoveToRegion(new MapSpan(center, latSpan * 1.2, lngSpan * 1.2));
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"Google Route error: {ex.Message}");
-            await DisplayAlert("Error", ex.Message, "OK");
+            Debug.WriteLine($"OSRM Route error: {ex.Message}");
+            await DisplayAlert("Route Error", ex.Message, "OK");
         }
     }
 
-    //helpers
     private async Task WaitForMapReady()
     {
         int tries = 0;
@@ -219,55 +252,21 @@ public partial class MapPage : ContentPage
         }
     }
 
-    private List<Location> DecodePolyline(string polyline)
-    {
-        var poly = new List<Location>();
-        int index = 0, lat = 0, lng = 0;
-
-        while (index < polyline.Length)
-        {
-            int result = 1, shift = 0, b;
-            do
-            {
-                b = polyline[index++] - 63 - 1;
-                result += b << shift;
-                shift += 5;
-            } while (b >= 0x1f);
-            lat += (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
-
-            result = 1;
-            shift = 0;
-            do
-            {
-                b = polyline[index++] - 63 - 1;
-                result += b << shift;
-                shift += 5;
-            } while (b >= 0x1f);
-            lng += (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
-
-            poly.Add(new Location(lat * 1e-5, lng * 1e-5));
-        }
-
-        return poly;
-    }
-
-    
-    //helpers
-
     private async void OnNavigateClicked(object sender, EventArgs e)
     {
         if (sender is Button btn && btn.CommandParameter is ParkingLocation p)
         {
             vm.SelectedParking = p;
 
-            await Microsoft.Maui.ApplicationModel.Map.OpenAsync(
-                p.Latitude,
-                p.Longitude,
-                new MapLaunchOptions
-                {
-                    Name = p.Name,
-                    NavigationMode = NavigationMode.Driving
-                });
+            _navigationState.StartNavigation(p.Name ?? "Destination", p.Latitude, p.Longitude);
+
+            string name = Uri.EscapeDataString(p.Name ?? "Destination");
+
+            await Shell.Current.GoToAsync(
+                $"{nameof(NavigationMapPage)}" +
+                $"?destLat={p.Latitude.ToString(System.Globalization.CultureInfo.InvariantCulture)}" +
+                $"&destLng={p.Longitude.ToString(System.Globalization.CultureInfo.InvariantCulture)}" +
+                $"&destName={name}");
         }
     }
 
@@ -275,5 +274,28 @@ public partial class MapPage : ContentPage
     {
         if (e.Parameter is ParkingLocation p)
             SelectParkingAsync(p);
+    }
+
+    private void ResetMap()
+    {
+        // Clear route
+        if (routeLine != null)
+        {
+            map.MapElements.Remove(routeLine);
+            routeLine = null;
+        }
+
+        // Clear pins
+        map.Pins.Clear();
+
+        // Clear ViewModel data
+        vm.Parkings.Clear();
+
+        vm.SelectedParking = null;
+
+        userLat = 0;
+        userLng = 0;
+
+        _initialized = false;
     }
 }
