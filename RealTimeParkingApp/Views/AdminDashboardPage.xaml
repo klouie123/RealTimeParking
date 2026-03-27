@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:RealTimeParkingApp.ViewModels"
+             x:Class="RealTimeParkingApp.Views.AdminDashboardPage"
+             Title="Admin Dashboard">
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="☰" Priority="0" Order="Primary" Clicked="HamburgerButton_Clicked"/>
+    </ContentPage.ToolbarItems>
+    
+    <Grid>
+        <StackLayout Padding="20" Spacing="15">
+
+            <Label Text="Welcome, Admin!" FontSize="24" HorizontalOptions="Center"/>
+            <Label x:Name="UsernameLabel" FontSize="18" HorizontalOptions="Center" />
+            <Button Text="Manage Users" Clicked="ManageUsers_Clicked"/>
+            <Button Text="Manage Parking Locations"/>
+  
+        </StackLayout>
+
+        <Grid x:Name="FlyoutPanel" BackgroundColor="#DDFFFFFF"
+              WidthRequest="250"
+              HorizontalOptions="End"
+              IsVisible="False"
+              TranslationX="250">
+            <StackLayout Padding="20" Spacing="20">
+                <Label x:Name="FlyoutUsernameLabel" FontSize="20" TextColor="Black" />
+                <Label Text="{Binding Email}" FontSize="16" TextColor="Black"/>
+                <Label Text="{Binding Role}" FontSize="16" TextColor="Black"/>
+                <Button Text="Logout" Clicked="LogoutButton_Clicked"/>
+            </StackLayout>
+        </Grid>
+    </Grid>
+
+</ContentPage>

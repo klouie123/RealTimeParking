@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="RealTimeParkingApp.Views.RegisterPage"
+             Title="RegisterPage">
+
+    <StackLayout Padding="20" Spacing="15" VerticalOptions="Center">
+        <Label Text="Create a New Account" FontSize="24" HorizontalOptions="Center" />
+
+        <Entry x:Name="UsernameEntry" Placeholder="Username" />
+        <Entry x:Name="FirstNameEntry" Placeholder="First Name" />
+        <Entry x:Name="MiddleNameEntry" Placeholder="Middle Name (Optional)" />
+        <Entry x:Name="LastNameEntry" Placeholder="Last Name" />
+        <Entry x:Name="EmailEntry" Placeholder="Email" Keyboard="Email" />
+        <Entry x:Name="PasswordEntry" Placeholder="Password" IsPassword="True" />
+
+        <Button Text="Register" Clicked="RegisterButton_Clicked" />
+    </StackLayout>
+</ContentPage>

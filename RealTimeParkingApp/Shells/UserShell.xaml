@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+       x:Class="RealTimeParkingApp.Shells.UserShell"
+       xmlns:views="clr-namespace:RealTimeParkingApp.Views"
+       Title="RealTimeParkingApp">
+
+    <ShellContent
+        Title="Dashboard"
+        ContentTemplate="{DataTemplate views:UserDashboardPage}" />
+
+    <!--<ShellContent
+        Title="Map"
+        Route="MapPage"
+        ContentTemplate="{DataTemplate views:MapPage}" />-->
+</Shell>

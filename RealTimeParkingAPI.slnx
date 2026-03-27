@@ -1,3 +1,6 @@
 <Solution>
   <Project Path="RealTimeParkingAPI/RealTimeParkingAPI.csproj" />
+  <Project Path="RealTimeParkingApp/RealTimeParkingApp.csproj" Id="4373b09a-1866-442c-a921-902cd3c5c791">
+    <Deploy Solution="Debug|*" />
+  </Project>
 </Solution>

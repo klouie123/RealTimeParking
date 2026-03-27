@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="RealTimeParkingApp.Views.UserDashboardPage"
+             Title="UserDashboardPage">
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="☰" Priority="0" Order="Primary" Clicked="HamburgerButton_Clicked"/>
+    </ContentPage.ToolbarItems>
+
+    <Grid>
+        <StackLayout Padding="20" Spacing="15">
+            <Label Text="Welcome!" FontSize="24" HorizontalOptions="Center"/>
+            <Label x:Name="UsernameLabel" FontSize="18" HorizontalOptions="Center" />
+
+            <Button Text="Quick Search (Nearest Parking)" Clicked="QuickSearch_Clicked"/>
+            <Button Text="Search by Address" Clicked="InputAddress_Clicked"/>
+        </StackLayout>
+
+        <Grid x:Name="FlyoutPanel" BackgroundColor="#DDFFFFFF"
+              WidthRequest="250"
+              HorizontalOptions="End"
+              IsVisible="False"
+              TranslationX="250">
+            <StackLayout Padding="20" Spacing="20">
+                <Label x:Name="FlyoutUsernameLabel" FontSize="20" TextColor="Black" />
+                <Label Text="Email: user@example.com" FontSize="16" TextColor="Black"/>
+                <Label Text="Role: User" FontSize="16" TextColor="Black"/>
+                <Button Text="Logout" Clicked="LogoutButton_Clicked"/>
+            </StackLayout>
+        </Grid>
+    </Grid>
+
+</ContentPage>
