@@ -43,6 +43,12 @@
                        Text="Waiting for location..."
                        FontSize="13"
                        TextColor="Gray" />
+
+                <Button Text="Cancel Navigation"
+        BackgroundColor="Red"
+        TextColor="White"
+        CornerRadius="12"
+        Clicked="CancelNavigation_Clicked" />
             </VerticalStackLayout>
         </Frame>
 

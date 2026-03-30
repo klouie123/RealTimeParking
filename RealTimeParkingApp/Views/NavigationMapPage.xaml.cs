@@ -101,13 +101,8 @@ public partial class NavigationMapPage : ContentPage
     {
         try
         {
-            var location = await Geolocation.GetLastKnownLocationAsync();
-
-            if (location == null)
-            {
-                location = await Geolocation.GetLocationAsync(
-                    new GeolocationRequest(GeolocationAccuracy.High, TimeSpan.FromSeconds(10)));
-            }
+            var location = await Geolocation.GetLocationAsync(
+                new GeolocationRequest(GeolocationAccuracy.High, TimeSpan.FromSeconds(10)));
 
             if (location == null)
             {
@@ -127,12 +122,12 @@ public partial class NavigationMapPage : ContentPage
             double speedKph = 0;
             if (location.Speed.HasValue && location.Speed.Value > 0)
             {
-                speedKph = location.Speed.Value * 3.6; // m/s to km/h
+                speedKph = location.Speed.Value * 3.6;
             }
 
             if (speedKph < 3)
             {
-                speedKph = 20; // fallback speed if user is standing or unavailable
+                speedKph = 20;
             }
 
             double etaMinutes = (distanceKm / speedKph) * 60.0;
@@ -146,15 +141,20 @@ public partial class NavigationMapPage : ContentPage
             EtaLabel.Text = $"ETA: {Math.Ceiling(etaMinutes)} min";
             StatusLabel.Text = "Navigating...";
 
-            if (distanceKm <= 0.03) // 30 meters
+            // draw route first
+            await DrawRouteOsrmAsync(userLocation, destination);
+
+            // arrived check after drawing
+            if (distanceKm <= 0.01) // 10 meters
             {
                 _navigationState.HasArrived = true;
                 ArrivedPanel.IsVisible = true;
                 StatusLabel.Text = "You arrived";
-                return;
             }
-
-            await DrawRouteOsrmAsync(userLocation, destination);
+            else
+            {
+                ArrivedPanel.IsVisible = false;
+            }
         }
         catch (Exception ex)
         {
@@ -282,6 +282,34 @@ public partial class NavigationMapPage : ContentPage
     private async void BackToDashboard_Clicked(object sender, EventArgs e)
     {
         _navigationState.StopNavigation();
+        await Shell.Current.GoToAsync("..");
+    }
+
+    private async void CancelNavigation_Clicked(object sender, EventArgs e)
+    {
+        bool confirm = await DisplayAlert(
+            "Cancel Navigation",
+            "Are you sure you want to cancel?",
+            "Yes",
+            "No");
+
+        if (!confirm)
+            return;
+
+        // stop navigation state
+        _navigationState.StopNavigation();
+
+        // remove route line
+        if (routeLine != null)
+        {
+            map.MapElements.Remove(routeLine);
+            routeLine = null;
+        }
+
+        // clear pins
+        map.Pins.Clear();
+
+        // go back to dashboard
         await Shell.Current.GoToAsync("..");
     }
 }
