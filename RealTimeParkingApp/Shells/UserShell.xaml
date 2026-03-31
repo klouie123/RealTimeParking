@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+       xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
        x:Class="RealTimeParkingApp.Shells.UserShell"
        xmlns:views="clr-namespace:RealTimeParkingApp.Views"
        Title="RealTimeParkingApp">
@@ -8,13 +9,13 @@
     <TabBar>
         <ShellContent
             Title="Home"
-            Icon="home.png"
+            Icon="ic_fluent_home_24_filled.png"
             Route="UserDashboardPage"
             ContentTemplate="{DataTemplate views:UserDashboardPage}" />
 
         <ShellContent
             Title="Profile"
-            Icon="profile.png"
+            Icon="ic_fluent_Person_24_filled.png"
             Route="ProfilePage"
             ContentTemplate="{DataTemplate views:ProfilePage}" />
     </TabBar>

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using MauiIcons.Fluent.Filled;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Controls.Maps;
 using RealTimeParkingApp.Services;
@@ -21,7 +22,10 @@ namespace RealTimeParkingApp
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
-                });
+                })
+            // Initialises the .Net Maui Icons - Fluent
+                .UseFluentFilledMauiIcons();
+
 
 #if DEBUG
             builder.Configuration.AddUserSecrets<App>();

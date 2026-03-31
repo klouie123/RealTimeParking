@@ -1,101 +1,197 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
              x:Class="RealTimeParkingApp.Views.UserDashboardPage"
-             Title="Dashboard">
+             Title="Dashboard"
+             BackgroundColor="#F8F9FB">
 
-    <Grid>
+    <Grid RowDefinitions="*,Auto">
+
+        <!-- Main Content -->
+        <ScrollView Grid.Row="0">
+            <VerticalStackLayout Padding="20" Spacing="18">
+
+                <!-- Header -->
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="Available Parking Locations"
+                           FontSize="24"
+                           FontAttributes="Bold"
+                           TextColor="#111827" />
+
+                    <Label Text="Choose a parking area to view available slots."
+                           FontSize="13"
+                           TextColor="#6B7280" />
+                </VerticalStackLayout>
+
+                <!-- Parking List -->
+                <CollectionView x:Name="ParkingLocationsCollectionView"
+                                SelectionMode="None">
+                    <CollectionView.EmptyView>
+                        <VerticalStackLayout Padding="20" Spacing="6">
+                            <Label Text="No parking locations found."
+                                   FontSize="16"
+                                   HorizontalOptions="Center"
+                                   TextColor="#6B7280" />
+                            <Label Text="Please try again later."
+                                   FontSize="13"
+                                   HorizontalOptions="Center"
+                                   TextColor="#9CA3AF" />
+                        </VerticalStackLayout>
+                    </CollectionView.EmptyView>
+
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Frame Margin="0,0,0,12"
+                                   Padding="14"
+                                   CornerRadius="14"
+                                   HasShadow="False"
+                                   BackgroundColor="White"
+                                   BorderColor="#E5E7EB">
+
+                                <VerticalStackLayout Spacing="10">
+                                    <Label Text="{Binding Name}"
+                                           FontSize="17"
+                                           FontAttributes="Bold"
+                                           TextColor="#111827" />
+
+                                    <Label Text="{Binding Description}"
+                                           FontSize="13"
+                                           TextColor="#6B7280"
+                                           LineBreakMode="WordWrap" />
+
+                                    <Button Text="View Slots"
+                                            Clicked="ViewSlots_Clicked"
+                                            CommandParameter="{Binding .}"
+                                            BackgroundColor="#111827"
+                                            TextColor="White"
+                                            CornerRadius="10"
+                                            HeightRequest="42" />
+                                </VerticalStackLayout>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <!-- My Reserved Parking Button -->
+                <Button Text="My Reserved Parking"
+                        Clicked="OpenActiveReservation_Clicked"
+                        BackgroundColor="White"
+                        TextColor="#111827"
+                        BorderColor="#D1D5DB"
+                        BorderWidth="1"
+                        CornerRadius="12"
+                        HeightRequest="46" />
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Navigation Banner -->
         <Frame x:Name="NavigationBanner"
+               Grid.Row="1"
                IsVisible="False"
-               BackgroundColor="#E8F5E9"
-               CornerRadius="16"
-               Padding="10"
-               Margin="10"
-               VerticalOptions="End">
+               BackgroundColor="White"
+               BorderColor="#D1FAE5"
+               HasShadow="False"
+               CornerRadius="14"
+               Padding="12"
+               Margin="14,0,14,10">
 
-            <Grid ColumnDefinitions="*,Auto">
-                <VerticalStackLayout>
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                <VerticalStackLayout Spacing="2">
                     <Label Text="You are navigating"
-                           FontAttributes="Bold" />
+                           FontAttributes="Bold"
+                           FontSize="14"
+                           TextColor="#111827" />
                     <Label x:Name="NavigationBannerLabel"
                            Text="Tap to return to navigation"
-                           FontSize="12" />
+                           FontSize="12"
+                           TextColor="#6B7280" />
                 </VerticalStackLayout>
 
                 <Button Grid.Column="1"
                         Text="Open"
-                        Clicked="OpenNavigationBanner_Clicked" />
+                        Clicked="OpenNavigationBanner_Clicked"
+                        BackgroundColor="#111827"
+                        TextColor="White"
+                        CornerRadius="10"
+                        Padding="14,8" />
             </Grid>
         </Frame>
 
-        <StackLayout Padding="20" Spacing="15">
-            <Label Text="Available Parking Locations"
-                   FontSize="20"
-                   FontAttributes="Bold" />
-
-            <CollectionView x:Name="ParkingLocationsCollectionView">
-                <CollectionView.EmptyView>
-                    <Label Text="No parking locations found."
-                           FontSize="16"
-                           TextColor="Gray"
-                           HorizontalOptions="Center"
-                           VerticalOptions="Center" />
-                </CollectionView.EmptyView>
-
-                <CollectionView.ItemTemplate>
-                    <DataTemplate>
-                        <Frame Margin="5" Padding="10" CornerRadius="12">
-                            <VerticalStackLayout Spacing="8">
-                                <Label Text="{Binding Name}"
-                                       FontSize="18"
-                                       FontAttributes="Bold" />
-                                <Label Text="{Binding Description}"
-                                       FontSize="13"
-                                       TextColor="Gray" />
-                                <Button Text="View Slots"
-                                        Clicked="ViewSlots_Clicked"
-                                        CommandParameter="{Binding .}" />
-                            </VerticalStackLayout>
-                        </Frame>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
-
-            <Button Text="My Reserved Parking"
-                    Clicked="OpenActiveReservation_Clicked"/>
-        </StackLayout>
+        <!-- Reserved Panel -->
         <Frame x:Name="ReservedPanel"
-       IsVisible="False"
-       BackgroundColor="White"
-       CornerRadius="20"
-       Padding="15"
-       Margin="10"
-       VerticalOptions="End"
-       HasShadow="True">
+               Grid.RowSpan="2"
+               IsVisible="False"
+               BackgroundColor="White"
+               BorderColor="#E5E7EB"
+               CornerRadius="18"
+               Padding="18"
+               Margin="14"
+               VerticalOptions="End"
+               HasShadow="False">
 
-            <VerticalStackLayout Spacing="10">
+            <VerticalStackLayout Spacing="14">
                 <Label Text="My Reserved Parking"
-               FontSize="20"
-               FontAttributes="Bold" />
+                       FontSize="20"
+                       FontAttributes="Bold"
+                       TextColor="#111827" />
 
-                <Label x:Name="ReservedLocationLabel" Text="Location" />
-                <Label x:Name="ReservedSlotLabel" Text="Slot" />
-                <Label x:Name="ReservedStatusLabel" Text="Status" />
-                <Label x:Name="ReservedExpiryLabel" Text="Expires At" />
+                <Frame HasShadow="False"
+                       BackgroundColor="#F9FAFB"
+                       BorderColor="#E5E7EB"
+                       CornerRadius="12"
+                       Padding="12">
+                    <VerticalStackLayout Spacing="8">
+                        <Label x:Name="ReservedLocationLabel"
+                               Text="Location"
+                               FontSize="14"
+                               TextColor="#374151" />
+
+                        <Label x:Name="ReservedSlotLabel"
+                               Text="Slot"
+                               FontSize="14"
+                               TextColor="#374151" />
+
+                        <Label x:Name="ReservedStatusLabel"
+                               Text="Status"
+                               FontSize="14"
+                               TextColor="#374151" />
+
+                        <Label x:Name="ReservedExpiryLabel"
+                               Text="Expires At"
+                               FontSize="14"
+                               TextColor="#374151" />
+                    </VerticalStackLayout>
+                </Frame>
 
                 <HorizontalStackLayout Spacing="10">
                     <Button Text="Navigate"
-                    Clicked="NavigateReserved_Clicked"
-                    HorizontalOptions="FillAndExpand" />
+                            Clicked="NavigateReserved_Clicked"
+                            HorizontalOptions="FillAndExpand"
+                            BackgroundColor="#111827"
+                            TextColor="White"
+                            CornerRadius="10"
+                            HeightRequest="44" />
 
-                    <Button Text="Cancel Reservation"
-                    Clicked="CancelReserved_Clicked"
-                    HorizontalOptions="FillAndExpand" />
+                    <Button Text="Cancel"
+                            Clicked="CancelReserved_Clicked"
+                            HorizontalOptions="FillAndExpand"
+                            BackgroundColor="White"
+                            TextColor="#B91C1C"
+                            BorderColor="#FCA5A5"
+                            BorderWidth="1"
+                            CornerRadius="10"
+                            HeightRequest="44" />
                 </HorizontalStackLayout>
 
                 <Button Text="Close"
-                Clicked="CloseReservedPanel_Clicked" />
+                        Clicked="CloseReservedPanel_Clicked"
+                        BackgroundColor="#F3F4F6"
+                        TextColor="#111827"
+                        CornerRadius="10"
+                        HeightRequest="42" />
             </VerticalStackLayout>
         </Frame>
+
     </Grid>
 </ContentPage>
