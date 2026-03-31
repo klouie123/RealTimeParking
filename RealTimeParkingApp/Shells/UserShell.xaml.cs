@@ -10,5 +10,6 @@ public partial class UserShell : Shell
 
         Routing.RegisterRoute(nameof(MapPage), typeof(MapPage));
         Routing.RegisterRoute(nameof(NavigationMapPage), typeof(NavigationMapPage));
+        Routing.RegisterRoute(nameof(ParkingSlotsPage), typeof(ParkingSlotsPage));
     }
 }

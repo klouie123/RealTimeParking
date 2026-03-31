@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="RealTimeParkingApp.Views.ProfilePage"
+             Title="Profile">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="18">
+            <Label Text="My Profile"
+                   FontSize="26"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center" />
+
+            <Frame CornerRadius="16" Padding="16">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Username" FontAttributes="Bold" />
+                    <Label x:Name="UsernameValueLabel" />
+
+                    <Label Text="Email" FontAttributes="Bold" />
+                    <Label x:Name="EmailValueLabel" />
+
+                    <Label Text="Role" FontAttributes="Bold" />
+                    <Label x:Name="RoleValueLabel" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <Button Text="Logout"
+                    BackgroundColor="Red"
+                    TextColor="White"
+                    Clicked="LogoutButton_Clicked" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

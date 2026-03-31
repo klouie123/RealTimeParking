@@ -4,54 +4,65 @@
              x:Class="RealTimeParkingApp.Views.UserDashboardPage"
              Title="UserDashboardPage">
 
-    <ContentPage.ToolbarItems>
-        <ToolbarItem Text="☰" Priority="0" Order="Primary" Clicked="HamburgerButton_Clicked"/>
-    </ContentPage.ToolbarItems>
-
     <Grid>
-        <StackLayout Padding="20" Spacing="15">
-            <Label Text="Welcome!" FontSize="24" HorizontalOptions="Center"/>
-            <Label x:Name="UsernameLabel" FontSize="18" HorizontalOptions="Center" />
-
-            <Button Text="Quick Search (Nearest Parking)" Clicked="QuickSearch_Clicked"/>
-            <Button Text="Search by Address" Clicked="InputAddress_Clicked"/>
-        </StackLayout>
-
-        <Grid x:Name="FlyoutPanel" BackgroundColor="#DDFFFFFF"
-              WidthRequest="250"
-              HorizontalOptions="End"
-              IsVisible="False"
-              TranslationX="250">
-            <StackLayout Padding="20" Spacing="20">
-                <Label x:Name="FlyoutUsernameLabel" FontSize="20" TextColor="Black" />
-                <Label Text="Email: user@example.com" FontSize="16" TextColor="Black"/>
-                <Label Text="Role: User" FontSize="16" TextColor="Black"/>
-                <Button Text="Logout" Clicked="LogoutButton_Clicked"/>
-            </StackLayout>
-        </Grid>
-
         <Frame x:Name="NavigationBanner"
-       IsVisible="False"
-       BackgroundColor="#E8F5E9"
-       CornerRadius="16"
-       Padding="10"
-       Margin="10"
-       VerticalOptions="End">
+               IsVisible="False"
+               BackgroundColor="#E8F5E9"
+               CornerRadius="16"
+               Padding="10"
+               Margin="10"
+               VerticalOptions="End">
 
             <Grid ColumnDefinitions="*,Auto">
                 <VerticalStackLayout>
                     <Label Text="You are navigating"
-                   FontAttributes="Bold" />
+                           FontAttributes="Bold" />
                     <Label x:Name="NavigationBannerLabel"
-                   Text="Tap to return to navigation"
-                   FontSize="12" />
+                           Text="Tap to return to navigation"
+                           FontSize="12" />
                 </VerticalStackLayout>
 
                 <Button Grid.Column="1"
-                Text="Open"
-                Clicked="OpenNavigationBanner_Clicked" />
+                        Text="Open"
+                        Clicked="OpenNavigationBanner_Clicked" />
             </Grid>
         </Frame>
-    </Grid>
 
+        <StackLayout Padding="20" Spacing="15">
+            <Label Text="Available Parking Locations"
+                   FontSize="20"
+                   FontAttributes="Bold" />
+
+            <CollectionView x:Name="ParkingLocationsCollectionView">
+                <CollectionView.EmptyView>
+                    <Label Text="No parking locations found."
+                           FontSize="16"
+                           TextColor="Gray"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center" />
+                </CollectionView.EmptyView>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Frame Margin="5" Padding="10" CornerRadius="12">
+                            <VerticalStackLayout Spacing="8">
+                                <Label Text="{Binding Name}"
+                                       FontSize="18"
+                                       FontAttributes="Bold" />
+                                <Label Text="{Binding Description}"
+                                       FontSize="13"
+                                       TextColor="Gray" />
+                                <Button Text="View Slots"
+                                        Clicked="ViewSlots_Clicked"
+                                        CommandParameter="{Binding .}" />
+                            </VerticalStackLayout>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <Button Text="My Reserved Parking"
+                    Clicked="OpenActiveReservation_Clicked"/>
+        </StackLayout>
+    </Grid>
 </ContentPage>

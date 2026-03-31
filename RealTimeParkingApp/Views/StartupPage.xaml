@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="RealTimeParkingApp.Views.StartupPage"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="White">
+
+    <Grid Padding="20">
+        <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="20">
+            <Label Text="Real-Time Parking App"
+                   FontSize="26"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center" />
+
+            <ActivityIndicator IsRunning="True"
+                               WidthRequest="50"
+                               HeightRequest="50"
+                               HorizontalOptions="Center" />
+
+            <Label Text="Loading..."
+                   FontSize="16"
+                   HorizontalOptions="Center" />
+        </VerticalStackLayout>
+    </Grid>
+</ContentPage>

@@ -1,6 +1,3 @@
-using System.Net.Http.Headers;
-using Newtonsoft.Json;
-using RealTimeParkingApp.Models;
 using RealTimeParkingApp.Services;
 using RealTimeParkingApp.Shells;
 
@@ -8,9 +5,10 @@ namespace RealTimeParkingApp.Views;
 
 public partial class LoginPage : ContentPage
 {
-    private ApiService _apiService = new ApiService();
+    private readonly ApiService _apiService = new ApiService();
+
     public LoginPage()
-	{
+    {
         InitializeComponent();
     }
 
@@ -18,19 +16,33 @@ public partial class LoginPage : ContentPage
     {
         try
         {
-            // Call Login and get the response object
-            var loginResponse = await _apiService.Login(UsernameOrEmailEntry.Text, PasswordEntry.Text);
+            ErrorLabel.IsVisible = false;
 
-            // Check if the login response is valid and has a token
+            if (string.IsNullOrWhiteSpace(UsernameOrEmailEntry.Text) ||
+                string.IsNullOrWhiteSpace(PasswordEntry.Text))
+            {
+                ErrorLabel.Text = "Please enter username/email and password.";
+                ErrorLabel.IsVisible = true;
+                return;
+            }
+
+            LoginButton.IsEnabled = false;
+            LoginLoadingIndicator.IsVisible = true;
+            LoginLoadingIndicator.IsRunning = true;
+
+            var loginResponse = await _apiService.Login(
+                UsernameOrEmailEntry.Text.Trim(),
+                PasswordEntry.Text
+            );
+
             if (loginResponse != null && loginResponse.IsSuccess)
             {
-                // Optionally save token and role locally
-                Preferences.Set("jwt_token", loginResponse.Token);
-                Preferences.Set("user_role", loginResponse.Role);
+                Preferences.Set("jwt_token", loginResponse.Token ?? string.Empty);
+                Preferences.Set("user_role", loginResponse.Role ?? string.Empty);
+                Preferences.Set("user_id", loginResponse.UserId);
+                Preferences.Set("username", loginResponse.Username ?? "");
+                Preferences.Set("email", loginResponse.Email ?? "");
 
-                await DisplayAlertAsync("Success", "Logged in!", "OK");
-
-                //Page dashboardPage;
                 if (loginResponse.Role == "Admin")
                 {
                     Application.Current.MainPage = new AdminShell();
@@ -39,24 +51,27 @@ public partial class LoginPage : ContentPage
                 {
                     Application.Current.MainPage = new UserShell();
                 }
-
-                // Make the dashboard page the new root, preventing back navigation to login
-                //Application.Current.MainPage = new NavigationPage(dashboardPage);
             }
             else
             {
-                await DisplayAlertAsync("Error", "Invalid login", "OK");
+                ErrorLabel.Text = "Invalid login.";
+                ErrorLabel.IsVisible = true;
             }
         }
         catch (Exception ex)
         {
-            await DisplayAlertAsync("Crash Error", ex.Message, "OK");
+            await DisplayAlert("Crash Error", ex.Message, "OK");
+        }
+        finally
+        {
+            LoginButton.IsEnabled = true;
+            LoginLoadingIndicator.IsVisible = false;
+            LoginLoadingIndicator.IsRunning = false;
         }
     }
 
     private async void RegisterButton_Clicked(object sender, EventArgs e)
     {
-        // Navigate to the registration page
         await Navigation.PushAsync(new RegisterPage());
     }
 }

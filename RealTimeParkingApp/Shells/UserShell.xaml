@@ -5,12 +5,17 @@
        xmlns:views="clr-namespace:RealTimeParkingApp.Views"
        Title="RealTimeParkingApp">
 
-    <ShellContent
-        Title="Dashboard"
-        ContentTemplate="{DataTemplate views:UserDashboardPage}" />
+    <TabBar>
+        <ShellContent
+            Title="Home"
+            Icon="home.png"
+            Route="UserDashboardPage"
+            ContentTemplate="{DataTemplate views:UserDashboardPage}" />
 
-    <!--<ShellContent
-        Title="Map"
-        Route="MapPage"
-        ContentTemplate="{DataTemplate views:MapPage}" />-->
+        <ShellContent
+            Title="Profile"
+            Icon="profile.png"
+            Route="ProfilePage"
+            ContentTemplate="{DataTemplate views:ProfilePage}" />
+    </TabBar>
 </Shell>

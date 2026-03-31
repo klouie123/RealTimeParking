@@ -1,5 +1,6 @@
 using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Devices.Sensors;
+using RealTimeParkingApp.Models;
 using RealTimeParkingApp.Services;
 
 namespace RealTimeParkingApp.Views;
@@ -7,24 +8,23 @@ namespace RealTimeParkingApp.Views;
 public partial class UserDashboardPage : ContentPage
 {
     private readonly NavigationStateService _navigationState;
+    private readonly ParkingService _parkingService;
+
     public UserDashboardPage()
     {
         InitializeComponent();
 
         _navigationState = App.Services.GetService<NavigationStateService>();
+        _parkingService = App.Services.GetService<ParkingService>();
 
         var username = Preferences.Get("username", "User");
-
-        if (UsernameLabel != null)
-            UsernameLabel.Text = $"Logged in as: {username}";
-
-        if (FlyoutUsernameLabel != null)
-            FlyoutUsernameLabel.Text = $"Username: {username}";
     }
 
-    protected override void OnAppearing()
+    protected override async void OnAppearing()
     {
         base.OnAppearing();
+
+        await LoadParkingLocationsAsync();
 
         if (_navigationState != null && _navigationState.IsNavigating && !_navigationState.HasArrived)
         {
@@ -36,6 +36,69 @@ public partial class UserDashboardPage : ContentPage
         {
             NavigationBanner.IsVisible = false;
         }
+    }
+
+    private async Task LoadParkingLocationsAsync()
+    {
+        try
+        {
+            var locations = await _parkingService.GetParkingLocationsAsync();
+
+            if (locations == null)
+            {
+                ParkingLocationsCollectionView.ItemsSource = null;
+                return;
+            }
+
+            ParkingLocationsCollectionView.ItemsSource = locations;
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Error", ex.Message, "OK");
+        }
+    }
+
+    private async void ViewSlots_Clicked(object sender, EventArgs e)
+    {
+        if (sender is not Button btn || btn.CommandParameter is not ParkingLocation location)
+            return;
+
+        string encodedName = Uri.EscapeDataString(location.Name ?? "Parking");
+
+        await Shell.Current.GoToAsync(
+            $"{nameof(ParkingSlotsPage)}?parkingLocationId={location.Id}&parkingLocationName={encodedName}");
+    }
+
+    private async void OpenActiveReservation_Clicked(object sender, EventArgs e)
+    {
+        var userId = Preferences.Get("user_id", 0);
+
+        if (userId == 0)
+        {
+            await DisplayAlert("Error", "User not found.", "OK");
+            return;
+        }
+
+        var reservation = await _parkingService.GetActiveReservationAsync(userId);
+
+        if (reservation == null)
+        {
+            await DisplayAlert("Info", "You have no active reservation.", "OK");
+            return;
+        }
+
+        _navigationState.StartNavigation(
+            reservation.ParkingLocationName,
+            reservation.Latitude,
+            reservation.Longitude);
+
+        string name = Uri.EscapeDataString(reservation.ParkingLocationName);
+
+        await Shell.Current.GoToAsync(
+            $"{nameof(NavigationMapPage)}" +
+            $"?destLat={reservation.Latitude.ToString(System.Globalization.CultureInfo.InvariantCulture)}" +
+            $"&destLng={reservation.Longitude.ToString(System.Globalization.CultureInfo.InvariantCulture)}" +
+            $"&destName={name}");
     }
 
     private async void OpenNavigationBanner_Clicked(object sender, EventArgs e)
@@ -111,28 +174,5 @@ public partial class UserDashboardPage : ContentPage
         {
             await DisplayAlert("Error", ex.Message, "OK");
         }
-    }
-
-    private async void HamburgerButton_Clicked(object sender, EventArgs e)
-    {
-        if (FlyoutPanel.IsVisible)
-        {
-            await FlyoutPanel.TranslateTo(250, 0, 200);
-            FlyoutPanel.IsVisible = false;
-        }
-        else
-        {
-            FlyoutPanel.IsVisible = true;
-            await FlyoutPanel.TranslateTo(0, 0, 200);
-        }
-    }
-
-    private void LogoutButton_Clicked(object sender, EventArgs e)
-    {
-        Preferences.Remove("jwt_token");
-        Preferences.Remove("user_role");
-        Preferences.Remove("username");
-
-        Application.Current.MainPage = new NavigationPage(new LoginPage());
     }
 }

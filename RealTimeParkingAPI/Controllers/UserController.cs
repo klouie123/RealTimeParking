@@ -128,8 +128,12 @@ namespace RealTimeParkingAPI.Controllers
 
             return Ok(new
             {
+                IsSuccess = true,
+                UserId = user.Id,
                 token = jwt,
-                role = user.Role
+                role = user.Role,
+                username = user.Username,
+                email = user.Email
             });
         }
 

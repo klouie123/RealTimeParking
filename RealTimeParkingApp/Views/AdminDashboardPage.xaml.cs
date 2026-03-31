@@ -38,8 +38,10 @@ public partial class AdminDashboardPage : ContentPage
         Preferences.Remove("jwt_token");
         Preferences.Remove("user_role");
         Preferences.Remove("username");
+        Preferences.Remove("user_id");
 
-        Application.Current.MainPage = new LoginPage();
+
+        Application.Current.MainPage = new NavigationPage(new LoginPage());
     }
 
     private async void ManageUsers_Clicked(object sender, EventArgs e)
