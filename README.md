@@ -113,7 +113,7 @@ This system improves parking efficiency by allowing users to:
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git
+git clone https://github.com/klouie123/RealTimeParking.git
 ```
 
 2. Open the solution in Visual Studio
