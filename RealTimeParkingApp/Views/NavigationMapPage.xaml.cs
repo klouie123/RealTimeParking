@@ -19,6 +19,7 @@ public partial class NavigationMapPage : ContentPage
     private Pin? destinationPin;
 
     private bool _started;
+    private int _navigationSessionId = 0;
 
     public string DestinationLat { get; set; }
     public string DestinationLng { get; set; }
@@ -37,9 +38,6 @@ public partial class NavigationMapPage : ContentPage
     {
         base.OnAppearing();
 
-        if (_started)
-            return;
-
         if (!double.TryParse(DestinationLat, NumberStyles.Any, CultureInfo.InvariantCulture, out _destLat) ||
             !double.TryParse(DestinationLng, NumberStyles.Any, CultureInfo.InvariantCulture, out _destLng))
         {
@@ -51,8 +49,17 @@ public partial class NavigationMapPage : ContentPage
             ? "Destination"
             : Uri.UnescapeDataString(DestinationName);
 
+        if (_started)
+            return;
+
         _started = true;
         await StartNavigationAsync();
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        _started = false;
     }
 
     protected override bool OnBackButtonPressed()
@@ -76,19 +83,45 @@ public partial class NavigationMapPage : ContentPage
                 return;
             }
 
+            _navigationSessionId++;
+            int currentSession = _navigationSessionId;
+
+            // full UI reset
+            ArrivedPanel.IsVisible = false;
+            StatusLabel.Text = "Loading route...";
+            DistanceLabel.Text = "Distance:";
+            SpeedLabel.Text = "Speed:";
+            EtaLabel.Text = "ETA:";
+
+            if (routeLine != null)
+            {
+                map.MapElements.Remove(routeLine);
+                routeLine = null;
+            }
+
+            map.Pins.Clear();
+            userPin = null;
+            destinationPin = null;
+
             await UpdateNavigationAsync();
 
             Device.StartTimer(TimeSpan.FromSeconds(4), () =>
             {
+                if (currentSession != _navigationSessionId)
+                    return false;
+
+                if (!_navigationState.IsNavigating || _navigationState.HasArrived)
+                    return false;
+
                 MainThread.BeginInvokeOnMainThread(async () =>
                 {
-                    if (!_navigationState.IsNavigating || _navigationState.HasArrived)
+                    if (currentSession != _navigationSessionId)
                         return;
 
                     await UpdateNavigationAsync();
                 });
 
-                return _navigationState.IsNavigating && !_navigationState.HasArrived;
+                return true;
             });
         }
         catch (Exception ex)
@@ -139,13 +172,11 @@ public partial class NavigationMapPage : ContentPage
             DistanceLabel.Text = $"Distance: {distanceKm:F2} km";
             SpeedLabel.Text = $"Speed: {speedKph:F1} km/h";
             EtaLabel.Text = $"ETA: {Math.Ceiling(etaMinutes)} min";
-            StatusLabel.Text = "Navigating...";
+            StatusLabel.Text = "Navigating.";
 
-            // draw route first
             await DrawRouteOsrmAsync(userLocation, destination);
 
-            // arrived check after drawing
-            if (distanceKm <= 0.01) // 10 meters
+            if (distanceKm <= 0.01)
             {
                 _navigationState.HasArrived = true;
                 ArrivedPanel.IsVisible = true;
@@ -165,11 +196,7 @@ public partial class NavigationMapPage : ContentPage
 
     private void UpdatePins(Location userLocation, Location destination)
     {
-        if (userPin != null)
-            map.Pins.Remove(userPin);
-
-        if (destinationPin != null)
-            map.Pins.Remove(destinationPin);
+        map.Pins.Clear();
 
         userPin = new Pin
         {
@@ -282,7 +309,8 @@ public partial class NavigationMapPage : ContentPage
     private async void BackToDashboard_Clicked(object sender, EventArgs e)
     {
         _navigationState.StopNavigation();
-        await Shell.Current.GoToAsync("..");
+        _navigationSessionId++;
+        await Shell.Current.GoToAsync(".");
     }
 
     private async void CancelNavigation_Clicked(object sender, EventArgs e)
@@ -296,20 +324,27 @@ public partial class NavigationMapPage : ContentPage
         if (!confirm)
             return;
 
-        // stop navigation state
         _navigationState.StopNavigation();
+        _navigationSessionId++;
+        _started = false;
 
-        // remove route line
         if (routeLine != null)
         {
             map.MapElements.Remove(routeLine);
             routeLine = null;
         }
 
-        // clear pins
         map.Pins.Clear();
+        userPin = null;
+        destinationPin = null;
 
-        // go back to dashboard
+        ArrivedPanel.IsVisible = false;
+        DestinationLabel.Text = "Destination";
+        DistanceLabel.Text = "Distance:";
+        SpeedLabel.Text = "Speed:";
+        EtaLabel.Text = "ETA:";
+        StatusLabel.Text = "Navigation cancelled.";
+
         await Shell.Current.GoToAsync("..");
     }
 }

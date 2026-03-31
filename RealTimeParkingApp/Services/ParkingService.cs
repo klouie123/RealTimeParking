@@ -19,15 +19,14 @@ public class ParkingService
     {
         try
         {
-            var url = $"{ApiConfig.BaseUrl}parkinglocations";
+            var url = $"{ApiConfig.BaseUrl}ParkingLocations";
             var response = await _http.GetAsync(url);
 
             if (!response.IsSuccessStatusCode)
                 return new List<ParkingLocation>();
 
             var json = await response.Content.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<List<ParkingLocation>>(json)
-                   ?? new List<ParkingLocation>();
+            return JsonConvert.DeserializeObject<List<ParkingLocation>>(json) ?? new List<ParkingLocation>();
         }
         catch
         {
@@ -39,15 +38,14 @@ public class ParkingService
     {
         try
         {
-            var url = $"{ApiConfig.BaseUrl}parkingslots/location/{parkingLocationId}";
+            var url = $"{ApiConfig.BaseUrl}ParkingSlots/location/{parkingLocationId}";
             var response = await _http.GetAsync(url);
 
             if (!response.IsSuccessStatusCode)
                 return new List<ParkingSlot>();
 
             var json = await response.Content.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<List<ParkingSlot>>(json)
-                   ?? new List<ParkingSlot>();
+            return JsonConvert.DeserializeObject<List<ParkingSlot>>(json) ?? new List<ParkingSlot>();
         }
         catch
         {
@@ -59,16 +57,16 @@ public class ParkingService
     {
         try
         {
-            var url = $"{ApiConfig.BaseUrl}parkingslots/reserve";
+            var url = $"{ApiConfig.BaseUrl}ParkingSlots/reserve";
 
-            var body = new
+            var payload = new
             {
                 UserId = userId,
                 ParkingSlotId = parkingSlotId
             };
 
-            var jsonBody = JsonConvert.SerializeObject(body);
-            var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
+            var json = JsonConvert.SerializeObject(payload);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
 
             var response = await _http.PostAsync(url, content);
 
@@ -84,7 +82,7 @@ public class ParkingService
     {
         try
         {
-            var url = $"{ApiConfig.BaseUrl}reservations/user/{userId}/active";
+            var url = $"{ApiConfig.BaseUrl}Reservations/user/{userId}/active";
             var response = await _http.GetAsync(url);
 
             if (!response.IsSuccessStatusCode)
@@ -96,6 +94,39 @@ public class ParkingService
         catch
         {
             return null;
+        }
+    }
+
+    public async Task<ParkingLocation?> GetParkingLocationByIdAsync(int parkingLocationId)
+    {
+        try
+        {
+            var response = await _http.GetAsync($"{ApiConfig.BaseUrl}/parkinglocations/{parkingLocationId}");
+
+            if (!response.IsSuccessStatusCode)
+                return null;
+
+            var json = await response.Content.ReadAsStringAsync();
+            return Newtonsoft.Json.JsonConvert.DeserializeObject<ParkingLocation>(json);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    public async Task<bool> CancelReservationAsync(int reservationId)
+    {
+        try
+        {
+            var url = $"{ApiConfig.BaseUrl}Reservations/{reservationId}/cancel";
+            var response = await _http.PostAsync(url, null);
+
+            return response.IsSuccessStatusCode;
+        }
+        catch
+        {
+            return false;
         }
     }
 

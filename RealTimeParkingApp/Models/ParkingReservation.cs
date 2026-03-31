@@ -9,8 +9,9 @@ namespace RealTimeParkingApp.Models
         public int Id { get; set; }
         public int UserId { get; set; }
         public int ParkingSlotId { get; set; }
-        public DateTime ReservedAt { get; set; }
+        public DateTime? ReservedAt { get; set; }
         public DateTime? ExpiresAt { get; set; }
+        public DateTime? CancelledAt { get; set; }
         public string Status { get; set; } = "";
     }
 }

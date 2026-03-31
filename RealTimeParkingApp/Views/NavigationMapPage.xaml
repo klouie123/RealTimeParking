@@ -9,7 +9,7 @@
 
         <maps:Map x:Name="map"
                   Grid.Row="0"
-                  IsShowingUser="False" />
+                  IsShowingUser="True" />
 
         <Frame Grid.Row="1"
                Margin="10,10,10,5"
@@ -35,11 +35,11 @@
                        TextColor="Blue" />
 
                 <Label x:Name="SpeedLabel"
-                       Text="Speed: --"
+                       Text="Speed: "
                        FontSize="14"
                        TextColor="Gray" />
 
-                <Label x:Name="StatusLabel"
+                    <Label x:Name="StatusLabel"
                        Text="Waiting for location..."
                        FontSize="13"
                        TextColor="Gray" />

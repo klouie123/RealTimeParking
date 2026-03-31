@@ -2,7 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="RealTimeParkingApp.Views.UserDashboardPage"
-             Title="UserDashboardPage">
+             Title="Dashboard">
 
     <Grid>
         <Frame x:Name="NavigationBanner"
@@ -64,5 +64,38 @@
             <Button Text="My Reserved Parking"
                     Clicked="OpenActiveReservation_Clicked"/>
         </StackLayout>
+        <Frame x:Name="ReservedPanel"
+       IsVisible="False"
+       BackgroundColor="White"
+       CornerRadius="20"
+       Padding="15"
+       Margin="10"
+       VerticalOptions="End"
+       HasShadow="True">
+
+            <VerticalStackLayout Spacing="10">
+                <Label Text="My Reserved Parking"
+               FontSize="20"
+               FontAttributes="Bold" />
+
+                <Label x:Name="ReservedLocationLabel" Text="Location" />
+                <Label x:Name="ReservedSlotLabel" Text="Slot" />
+                <Label x:Name="ReservedStatusLabel" Text="Status" />
+                <Label x:Name="ReservedExpiryLabel" Text="Expires At" />
+
+                <HorizontalStackLayout Spacing="10">
+                    <Button Text="Navigate"
+                    Clicked="NavigateReserved_Clicked"
+                    HorizontalOptions="FillAndExpand" />
+
+                    <Button Text="Cancel Reservation"
+                    Clicked="CancelReserved_Clicked"
+                    HorizontalOptions="FillAndExpand" />
+                </HorizontalStackLayout>
+
+                <Button Text="Close"
+                Clicked="CloseReservedPanel_Clicked" />
+            </VerticalStackLayout>
+        </Frame>
     </Grid>
 </ContentPage>

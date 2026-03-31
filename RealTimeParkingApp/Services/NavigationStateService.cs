@@ -7,6 +7,7 @@ namespace RealTimeParkingApp.Services
     public class NavigationStateService
     {
         public bool IsNavigating { get; set; }
+        public bool HasArrived { get; set; }
 
         public string DestinationName { get; set; } = string.Empty;
         public double DestinationLat { get; set; }
@@ -16,15 +17,15 @@ namespace RealTimeParkingApp.Services
         public double CurrentSpeedKph { get; set; }
         public double EtaMinutes { get; set; }
 
-        public bool HasArrived { get; set; }
-
-        public void StartNavigation(string name, double lat, double lng)
+        public void StartNavigation(string destinationName, double lat, double lng)
         {
             IsNavigating = true;
             HasArrived = false;
-            DestinationName = name;
+
+            DestinationName = destinationName ?? string.Empty;
             DestinationLat = lat;
             DestinationLng = lng;
+
             RemainingDistanceKm = 0;
             CurrentSpeedKph = 0;
             EtaMinutes = 0;
@@ -34,9 +35,11 @@ namespace RealTimeParkingApp.Services
         {
             IsNavigating = false;
             HasArrived = false;
+
             DestinationName = string.Empty;
             DestinationLat = 0;
             DestinationLng = 0;
+
             RemainingDistanceKm = 0;
             CurrentSpeedKph = 0;
             EtaMinutes = 0;
