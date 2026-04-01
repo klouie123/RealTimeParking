@@ -14,11 +14,10 @@ public partial class ParkingSlotsPage : ContentPage
     private readonly NavigationStateService _navigationState;
 
     private int _parkingLocationId;
-    private ParkingSlot? _reservedSlot;
-
-    // ito ang gagamitin sa navigation
     private double _destinationLat;
     private double _destinationLng;
+
+    private ParkingSlotUiModel? _selectedSlotForReserve;
 
     public string DestinationLatText { get; set; }
     public string DestinationLngText { get; set; }
@@ -46,118 +45,137 @@ public partial class ParkingSlotsPage : ContentPage
         double.TryParse(DestinationLngText, CultureInfo.InvariantCulture, out _destinationLng);
 
         await LoadSlotsAsync();
-        await CheckActiveReservationAsync();
     }
 
     private async Task LoadSlotsAsync()
     {
-        var slots = await _parkingService.GetSlotsByLocationAsync(_parkingLocationId);
-        SlotsCollectionView.ItemsSource = slots;
-    }
-
-    private async Task CheckActiveReservationAsync()
-    {
         try
         {
-            var userId = Preferences.Get("user_id", 0);
-            if (userId == 0)
-                return;
+            var slots = await _parkingService.GetSlotsByLocationAsync(_parkingLocationId);
 
-            var reservation = await _parkingService.GetActiveReservationAsync(userId);
-
-            if (reservation != null && reservation.ParkingLocationId == _parkingLocationId)
+            if (slots == null)
             {
-                NavigateButton.IsVisible = true;
-            }
-            else
-            {
-                NavigateButton.IsVisible = false;
-            }
-        }
-        catch
-        {
-            NavigateButton.IsVisible = false;
-        }
-    }
-
-    private async void ReserveButton_Clicked(object sender, EventArgs e)
-    {
-        if (sender is not Button btn || btn.CommandParameter is not ParkingSlot slot)
-            return;
-
-        if (slot.Status != "Available")
-        {
-            await DisplayAlert("Unavailable", "This slot is not available.", "OK");
-            return;
-        }
-
-        var userId = Preferences.Get("user_id", 0);
-
-        if (userId == 0)
-        {
-            await DisplayAlert("Error", "User not found.", "OK");
-            return;
-        }
-
-        var success = await _parkingService.ReserveSlotAsync(userId, slot.Id);
-
-        if (!success)
-        {
-            await DisplayAlert("Failed", "Could not reserve slot. It may already be reserved.", "OK");
-            await LoadSlotsAsync();
-            return;
-        }
-
-        _reservedSlot = slot;
-
-        await DisplayAlert("Success", $"Slot {slot.SlotCode} reserved successfully.", "OK");
-
-        NavigateButton.IsVisible = true;
-
-        await LoadSlotsAsync();
-    }
-
-    private async void NavigateButton_Clicked(object sender, EventArgs e)
-    {
-        try
-        {
-            var userId = Preferences.Get("user_id", 0);
-            if (userId == 0)
-            {
-                await DisplayAlert("Error", "User not found.", "OK");
+                SlotsCollectionView.ItemsSource = null;
                 return;
             }
 
-            var reservation = await _parkingService.GetActiveReservationAsync(userId);
-            if (reservation == null || reservation.ParkingLocationId != _parkingLocationId)
+            var uiSlots = slots.Select(slot =>
             {
-                await DisplayAlert("Info", "Please reserve a slot first.", "OK");
-                return;
-            }
+                bool isAvailable = string.Equals(slot.Status, "Available", StringComparison.OrdinalIgnoreCase);
 
-            if (_destinationLat == 0 && _destinationLng == 0)
-            {
-                await DisplayAlert("Error", "Destination coordinates not found.", "OK");
-                return;
-            }
+                return new ParkingSlotUiModel
+                {
+                    Id = slot.Id,
+                    SlotCode = slot.SlotCode,
+                    Status = slot.Status,
+                    IsAvailable = isAvailable,
 
-            string destinationName = Uri.UnescapeDataString(ParkingLocationName ?? "Reserved Parking");
+                    SlotBackgroundColor = isAvailable ? "#FFFFFF" : "#FEE2E2",
+                    SlotBorderColor = isAvailable ? "#E5E7EB" : "#FCA5A5",
+                    SlotTextColor = isAvailable ? "#111827" : "#991B1B",
+                    SlotSubTextColor = isAvailable ? "#6B7280" : "#B91C1C",
+                    StatusBadgeColor = isAvailable ? "#16A34A" : "#DC2626",
+                    SlotOpacity = isAvailable ? 1.0 : 0.85,
+                    SlotMessage = isAvailable
+                        ? "Tap to reserve this slot."
+                        : "This slot is already reserved."
+                };
+            }).ToList();
 
-            _navigationState.StartNavigation(destinationName, _destinationLat, _destinationLng);
-
-            string encodedName = Uri.EscapeDataString(destinationName);
-
-            //await DisplayAlert("Debug", $"Destination: {_destinationLat}, {_destinationLng}", "OK");
-
-            await Shell.Current.GoToAsync(
-                $"{nameof(NavigationMapPage)}" +
-                $"?destLat={_destinationLat.ToString(CultureInfo.InvariantCulture)}" +
-                $"&destLng={_destinationLng.ToString(CultureInfo.InvariantCulture)}" +
-                $"&destName={encodedName}");
+            SlotsCollectionView.ItemsSource = uiSlots;
         }
         catch (Exception ex)
         {
             await DisplayAlert("Error", ex.Message, "OK");
         }
     }
+
+    private async void SlotCard_Tapped(object sender, TappedEventArgs e)
+    {
+        try
+        {
+            if (e.Parameter is not ParkingSlotUiModel slot)
+                return;
+
+            if (!slot.IsAvailable)
+                return;
+
+            _selectedSlotForReserve = slot;
+
+            PopupSlotCodeLabel.Text = slot.SlotCode;
+            PopupSlotMessageLabel.Text = $"Do you want to reserve {slot.SlotCode}?";
+
+            await ShowReservePopupAsync();
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Error", ex.Message, "OK");
+        }
+    }
+
+    private async Task ShowReservePopupAsync()
+    {
+        ReservePopupOverlay.IsVisible = true;
+        ReservePopupPanel.TranslationY = 300;
+        await ReservePopupPanel.TranslateTo(0, 0, 220, Easing.CubicOut);
+    }
+
+    private async Task HideReservePopupAsync()
+    {
+        await ReservePopupPanel.TranslateTo(0, 300, 180, Easing.CubicIn);
+        ReservePopupOverlay.IsVisible = false;
+    }
+
+    private async void CancelReservePopup_Clicked(object sender, EventArgs e)
+    {
+        await HideReservePopupAsync();
+    }
+
+    private async void ReservePopupOverlay_Tapped(object sender, TappedEventArgs e)
+    {
+        await HideReservePopupAsync();
+    }
+
+    private async void ConfirmReserveButton_Clicked(object sender, EventArgs e)
+    {
+        try
+        {
+            if (_selectedSlotForReserve == null)
+                return;
+
+            var userId = Preferences.Get("user_id", 0);
+
+            if (userId == 0)
+            {
+                await HideReservePopupAsync();
+                await DisplayAlert("Error", "User not found.", "OK");
+                return;
+            }
+
+            var success = await _parkingService.ReserveSlotAsync(userId, _selectedSlotForReserve.Id);
+
+            await HideReservePopupAsync();
+
+            if (!success)
+            {
+                await DisplayAlert("Failed", "Could not reserve slot. It may already be reserved.", "OK");
+                await LoadSlotsAsync();
+                return;
+            }
+
+            string destinationName = Uri.UnescapeDataString(ParkingLocationName ?? "Reserved Parking");
+            _navigationState.StartNavigation(destinationName, _destinationLat, _destinationLng);
+
+            await DisplayAlert("Success", $"Slot {_selectedSlotForReserve.SlotCode} reserved successfully.", "OK");
+
+            _selectedSlotForReserve = null;
+            await LoadSlotsAsync();
+        }
+        catch (Exception ex)
+        {
+            await HideReservePopupAsync();
+            await DisplayAlert("Error", ex.Message, "OK");
+        }
+    }
 }
+

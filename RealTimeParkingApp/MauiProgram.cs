@@ -1,25 +1,17 @@
-﻿using MauiIcons.Fluent.Filled;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using Microsoft.Maui.Controls.Maps;
+﻿using Microsoft.Extensions.Logging;
 using RealTimeParkingApp.Services;
+using RealTimeParkingApp.Shells;
 using RealTimeParkingApp.ViewModels;
 using RealTimeParkingApp.Views;
-
-#if ANDROID
-using Microsoft.Maui.Controls.PlatformConfiguration;
-using Microsoft.Maui.Controls.PlatformConfiguration.AndroidSpecific;
-#endif
 
 namespace RealTimeParkingApp
 {
     public static class MauiProgram
     {
-
-        public static IServiceProvider ServiceProvider { get; private set; }
         public static MauiApp CreateMauiApp()
         {
             var builder = MauiApp.CreateBuilder();
+
             builder
                 .UseMauiApp<App>()
                 .UseMauiMaps()
@@ -27,28 +19,32 @@ namespace RealTimeParkingApp
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
-                })
-            // Initialises the .Net Maui Icons - Fluent
-                .UseFluentFilledMauiIcons();
-
+                });
 
 #if DEBUG
-            builder.Configuration.AddUserSecrets<App>();
             builder.Logging.AddDebug();
 #endif
+
             builder.Services.AddSingleton<ApiService>();
             builder.Services.AddSingleton<ParkingService>();
             builder.Services.AddSingleton<LocationService>();
-            builder.Services.AddSingleton<MapViewModel>();
-            builder.Services.AddSingleton<MapPage>();
             builder.Services.AddSingleton<NavigationStateService>();
-            builder.Services.AddSingleton<NavigationMapPage>();
 
-            var app = builder.Build();
+            builder.Services.AddTransient<MapViewModel>();
+            builder.Services.AddTransient<MapPage>();
+            builder.Services.AddTransient<NavigationMapPage>();
+            builder.Services.AddTransient<StartupPage>();
+            builder.Services.AddTransient<LoginPage>();
+            builder.Services.AddTransient<RegisterPage>();
+            builder.Services.AddTransient<ProfilePage>();
+            builder.Services.AddTransient<UserDashboardPage>();
+            builder.Services.AddTransient<ParkingSlotsPage>();
+            builder.Services.AddTransient<AdminDashboardPage>();
 
-            ServiceProvider = app.Services;
+            builder.Services.AddTransient<UserShell>();
+            builder.Services.AddTransient<AdminShell>();
 
-            return app;
+            return builder.Build();
         }
     }
-}
+} 

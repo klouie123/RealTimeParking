@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
 using System.Text;
 using Newtonsoft.Json;
 using RealTimeParkingApp.Config;
@@ -8,21 +6,45 @@ using RealTimeParkingApp.Models;
 
 namespace RealTimeParkingApp.Services
 {
-    internal class ApiService
+    public class ApiService
     {
         private readonly HttpClient _httpClient;
-        //private string _baseUrl = "http://10.0.2.2:6060/api/";
 
         public string Token { get; private set; } = "";
+
         public ApiService()
         {
             _httpClient = new HttpClient
             {
                 BaseAddress = new Uri(ApiConfig.BaseUrl)
             };
+
+            RestoreTokenFromPreferences();
         }
 
-        // para sa login
+        public void RestoreTokenFromPreferences()
+        {
+            var token = Preferences.Get("jwt_token", string.Empty);
+
+            if (!string.IsNullOrWhiteSpace(token))
+            {
+                Token = token;
+                _httpClient.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Bearer", token);
+            }
+            else
+            {
+                Token = "";
+                _httpClient.DefaultRequestHeaders.Authorization = null;
+            }
+        }
+
+        public void Logout()
+        {
+            Token = "";
+            _httpClient.DefaultRequestHeaders.Authorization = null;
+        }
+
         public async Task<LoginResponse?> Login(string usernameOrEmail, string password)
         {
             try
@@ -47,7 +69,8 @@ namespace RealTimeParkingApp.Services
                 if (result != null)
                 {
                     result.IsSuccess = true;
-                    Token = result.Token;
+                    Token = result.Token ?? "";
+
                     _httpClient.DefaultRequestHeaders.Authorization =
                         new AuthenticationHeaderValue("Bearer", Token);
                 }
@@ -56,7 +79,7 @@ namespace RealTimeParkingApp.Services
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Login error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Login error: {ex}");
                 return null;
             }
         }
@@ -65,50 +88,73 @@ namespace RealTimeParkingApp.Services
         {
             try
             {
-                // Use the HttpClient's BaseAddress + relative path
-                var url = "user/register"; // relative path only
-
                 var json = JsonConvert.SerializeObject(user);
-
-                var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-
-                var response = await _httpClient.PostAsync(url, content);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                var response = await _httpClient.PostAsync("user/register", content);
 
                 return response.IsSuccessStatusCode;
             }
             catch (Exception ex)
             {
-                // Optional: log exception
-                System.Diagnostics.Debug.WriteLine($"Register Error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Register Error: {ex}");
                 return false;
             }
         }
 
-        // para makakuha ng user (admin)
         public async Task<List<User>> GetUsers()
         {
-            var response = await _httpClient.GetAsync("user");
-            if (!response.IsSuccessStatusCode) return new List<User>();
-            var json = await response.Content.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<List<User>>(json);
+            try
+            {
+                var response = await _httpClient.GetAsync("user");
+
+                if (!response.IsSuccessStatusCode)
+                    return new List<User>();
+
+                var json = await response.Content.ReadAsStringAsync();
+                return JsonConvert.DeserializeObject<List<User>>(json) ?? new List<User>();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"GetUsers error: {ex}");
+                return new List<User>();
+            }
         }
 
-        //add user
         public async Task<bool> AddUser(User user)
         {
-            var content = new StringContent(JsonConvert.SerializeObject(user), Encoding.UTF8, "application/json");
-            var response = await _httpClient.PostAsync("user", content);
-            return response.IsSuccessStatusCode;
+            try
+            {
+                var content = new StringContent(
+                    JsonConvert.SerializeObject(user),
+                    Encoding.UTF8,
+                    "application/json");
+
+                var response = await _httpClient.PostAsync("user", content);
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"AddUser error: {ex}");
+                return false;
+            }
         }
 
         public async Task<string> GetParkingLocations()
         {
-            var response = await _httpClient.GetAsync("parking");
+            try
+            {
+                var response = await _httpClient.GetAsync("parking");
 
-            if (!response.IsSuccessStatusCode)
+                if (!response.IsSuccessStatusCode)
+                    return "";
+
+                return await response.Content.ReadAsStringAsync();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"GetParkingLocations error: {ex}");
                 return "";
-
-            return await response.Content.ReadAsStringAsync();
+            }
         }
     }
 }

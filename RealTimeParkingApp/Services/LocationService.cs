@@ -1,23 +1,30 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Microsoft.Maui.Devices.Sensors;
+﻿using Microsoft.Maui.Devices.Sensors;
 
 namespace RealTimeParkingApp.Services
 {
     public class LocationService
     {
-        public async Task<Location> GetCurrentLocationAsync()
+        public async Task<Location?> GetCurrentLocationAsync()
         {
-            var location = await Geolocation.GetLastKnownLocationAsync();
-
-            if (location == null)
+            try
             {
-                location = await Geolocation.GetLocationAsync(
-                    new GeolocationRequest(GeolocationAccuracy.High));
-            }
+                var location = await Geolocation.GetLastKnownLocationAsync();
 
-            return location;
+                if (location == null)
+                {
+                    location = await Geolocation.GetLocationAsync(
+                        new GeolocationRequest(
+                            GeolocationAccuracy.High,
+                            TimeSpan.FromSeconds(10)));
+                }
+
+                return location;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Location error: {ex}");
+                return null;
+            }
         }
     }
 }

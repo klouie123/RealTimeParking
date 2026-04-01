@@ -7,8 +7,8 @@ public partial class ProfilePage : ContentPage
     private bool _themeLoaded;
 
     public ProfilePage()
-	{
-		InitializeComponent();
+    {
+        InitializeComponent();
         LoadThemeSelection();
     }
 
@@ -57,12 +57,16 @@ public partial class ProfilePage : ContentPage
         if (!confirm)
             return;
 
+        var apiService = App.Services.GetRequiredService<ApiService>();
+        apiService.Logout();
+
         Preferences.Remove("jwt_token");
         Preferences.Remove("user_role");
         Preferences.Remove("username");
         Preferences.Remove("email");
         Preferences.Remove("user_id");
 
-        Application.Current.MainPage = new NavigationPage(new LoginPage());
+        Application.Current!.MainPage =
+            new NavigationPage(App.Services.GetRequiredService<LoginPage>());
     }
 }

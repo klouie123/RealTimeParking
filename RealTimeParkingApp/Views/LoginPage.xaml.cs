@@ -5,11 +5,12 @@ namespace RealTimeParkingApp.Views;
 
 public partial class LoginPage : ContentPage
 {
-    private readonly ApiService _apiService = new ApiService();
+    private readonly ApiService _apiService;
 
-    public LoginPage()
+    public LoginPage(ApiService apiService)
     {
         InitializeComponent();
+        _apiService = apiService;
     }
 
     private async void LoginButton_Clicked(object sender, EventArgs e)
@@ -45,11 +46,13 @@ public partial class LoginPage : ContentPage
 
                 if (loginResponse.Role == "Admin")
                 {
-                    Application.Current.MainPage = new AdminShell();
+                    Application.Current!.MainPage =
+                        App.Services.GetRequiredService<AdminShell>();
                 }
                 else
                 {
-                    Application.Current.MainPage = new UserShell();
+                    Application.Current!.MainPage =
+                        App.Services.GetRequiredService<UserShell>();
                 }
             }
             else
@@ -60,7 +63,7 @@ public partial class LoginPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Crash Error", ex.Message, "OK");
+            await DisplayAlert("Crash Error", ex.ToString(), "OK");
         }
         finally
         {
@@ -72,6 +75,6 @@ public partial class LoginPage : ContentPage
 
     private async void RegisterButton_Clicked(object sender, EventArgs e)
     {
-        await Navigation.PushAsync(new RegisterPage());
+        await Navigation.PushAsync(App.Services.GetRequiredService<RegisterPage>());
     }
 }

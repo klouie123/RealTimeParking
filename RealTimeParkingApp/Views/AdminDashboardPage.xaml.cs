@@ -1,7 +1,8 @@
 using System.Collections.Specialized;
-using Microsoft.Maui.Controls.Maps;
-using RealTimeParkingApp.ViewModels;
 using Microsoft.Maui.ApplicationModel;
+using Microsoft.Maui.Controls.Maps;
+using RealTimeParkingApp.Services;
+using RealTimeParkingApp.ViewModels;
 
 namespace RealTimeParkingApp.Views;
 
@@ -35,18 +36,22 @@ public partial class AdminDashboardPage : ContentPage
 
     private void LogoutButton_Clicked(object sender, EventArgs e)
     {
+        var apiService = App.Services.GetRequiredService<ApiService>();
+        apiService.Logout();
+
         Preferences.Remove("jwt_token");
         Preferences.Remove("user_role");
         Preferences.Remove("username");
         Preferences.Remove("user_id");
-
-
-        Application.Current.MainPage = new NavigationPage(new LoginPage());
+        Preferences.Remove("email");
+         
+        Application.Current!.MainPage =
+            new NavigationPage(App.Services.GetRequiredService<LoginPage>());
     }
 
     private async void ManageUsers_Clicked(object sender, EventArgs e)
     {
         // Temporary action - replace with navigation to your ManageUsers page
-        await DisplayAlertAsync("Manage Users", "Manage Users clicked", "OK");
+        await DisplayAlert("Manage Users", "Manage Users clicked", "OK");
     }
 }

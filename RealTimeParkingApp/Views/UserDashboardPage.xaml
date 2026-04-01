@@ -1,190 +1,282 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:maps="clr-namespace:Microsoft.Maui.Controls.Maps;assembly=Microsoft.Maui.Controls.Maps"
              x:Class="RealTimeParkingApp.Views.UserDashboardPage"
-             Title="Dashboard"
+             Shell.NavBarIsVisible="False"
+             NavigationPage.HasNavigationBar="False"
              BackgroundColor="{AppThemeBinding Light=#F8F9FB, Dark=#0F172A}">
 
-    <Grid RowDefinitions="*,Auto">
+    <Grid RowDefinitions="220,*">
 
-        <ScrollView Grid.Row="0">
-            <VerticalStackLayout Padding="20" Spacing="18">
+        <!-- TOP MAP AS HERO BACKGROUND -->
+        <Grid Grid.Row="0">
+            <maps:Map x:Name="PreviewMap"
+                      IsShowingUser="True"
+                      InputTransparent="True" />
 
-                <VerticalStackLayout Spacing="4">
-                    <Label Text="Available Parking Locations"
-                           FontSize="24"
+            <!-- dark gradient feel -->
+            <BoxView Opacity="0.18"
+                     Color="Black" />
+
+            <!-- top overlay -->
+            <Grid Padding="14,18,14,12"
+                  RowDefinitions="Auto,Auto"
+                  ColumnDefinitions="*,Auto,Auto">
+
+                <VerticalStackLayout Grid.Row="0"
+                                     Grid.Column="0"
+                                     Spacing="2">
+                    <Label Text="Dashboard"
+                           FontSize="28"
                            FontAttributes="Bold"
-                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+                           TextColor="{AppThemeBinding Light=#111827, Dark=White}" />
 
-                    <Label Text="Choose a parking area to view available slots."
+                    <Label x:Name="SelectedLocationDescriptionLabel"
+                           Text="Tap a parking card below to preview its location."
                            FontSize="13"
-                           TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+                           TextColor="{AppThemeBinding Light=#374151, Dark=#E5E7EB}" />
                 </VerticalStackLayout>
 
-                <CollectionView x:Name="ParkingLocationsCollectionView"
-                                SelectionMode="None">
-                    <CollectionView.EmptyView>
-                        <VerticalStackLayout Padding="20" Spacing="6">
-                            <Label Text="No parking locations found."
-                                   FontSize="16"
-                                   HorizontalOptions="Center"
-                                   TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
-                            <Label Text="Please try again later."
-                                   FontSize="13"
-                                   HorizontalOptions="Center"
-                                   TextColor="{AppThemeBinding Light=#9CA3AF, Dark=#94A3B8}" />
-                        </VerticalStackLayout>
-                    </CollectionView.EmptyView>
+                <!-- reserved button -->
+                <Button Grid.Row="0"
+                        Grid.Column="1"
+                        x:Name="ReservedFloatingButton"
+                        Text="Reserved"
+                        Clicked="ReservedFloatingButton_Clicked"
+                        BackgroundColor="#E5E7EB"
+                        TextColor="#111827"
+                        CornerRadius="22"
+                        HeightRequest="44"
+                        Padding="16,8"
+                        Margin="0,0,10,0" />
 
-                    <CollectionView.ItemTemplate>
-                        <DataTemplate>
-                            <Frame Margin="0,0,0,12"
-                                   Padding="14"
-                                   CornerRadius="14"
-                                   HasShadow="False"
-                                   BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
-                                   BorderColor="{AppThemeBinding Light=#E5E7EB, Dark=#334155}">
-
-                                <VerticalStackLayout Spacing="10">
-                                    <Label Text="{Binding Name}"
-                                           FontSize="17"
-                                           FontAttributes="Bold"
-                                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
-
-                                    <Label Text="{Binding Description}"
-                                           FontSize="13"
-                                           TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}"
-                                           LineBreakMode="WordWrap" />
-
-                                    <Button Text="View Slots"
-                                            Clicked="ViewSlots_Clicked"
-                                            CommandParameter="{Binding .}"
-                                            BackgroundColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
-                                            TextColor="{AppThemeBinding Light=White, Dark=#111827}"
-                                            CornerRadius="10"
-                                            HeightRequest="42" />
-                                </VerticalStackLayout>
-                            </Frame>
-                        </DataTemplate>
-                    </CollectionView.ItemTemplate>
-                </CollectionView>
-
-                <Button Text="My Reserved Parking"
-                        Clicked="OpenActiveReservation_Clicked"
-                        BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
-                        TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
-                        BorderColor="{AppThemeBinding Light=#D1D5DB, Dark=#334155}"
-                        BorderWidth="1"
-                        CornerRadius="12"
-                        HeightRequest="46" />
-            </VerticalStackLayout>
-        </ScrollView>
-
-        <Frame x:Name="NavigationBanner"
-               Grid.Row="1"
-               IsVisible="False"
-               BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
-               BorderColor="{AppThemeBinding Light=#D1FAE5, Dark=#14532D}"
-               HasShadow="False"
-               CornerRadius="14"
-               Padding="12"
-               Margin="14,0,14,10">
-
-            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-                <VerticalStackLayout Spacing="2">
-                    <Label Text="You are navigating"
-                           FontAttributes="Bold"
-                           FontSize="14"
-                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
-                    <Label x:Name="NavigationBannerLabel"
-                           Text="Tap to return to navigation"
-                           FontSize="12"
-                           TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
-                </VerticalStackLayout>
-
-                <Button Grid.Column="1"
-                        Text="Open"
-                        Clicked="OpenNavigationBanner_Clicked"
+                <!-- navigate button -->
+                <Button Grid.Row="0"
+                        Grid.Column="2"
+                        x:Name="FloatingNavigationButton"
+                        Text="Navigate"
+                        Clicked="FloatingNavigationButton_Clicked"
+                        IsVisible="False"
                         BackgroundColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
                         TextColor="{AppThemeBinding Light=White, Dark=#111827}"
-                        CornerRadius="10"
-                        Padding="14,8" />
-            </Grid>
-        </Frame>
+                        CornerRadius="22"
+                        HeightRequest="44"
+                        Padding="16,8" />
 
-        <Frame x:Name="ReservedPanel"
-               Grid.RowSpan="2"
-               IsVisible="False"
-               BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
-               BorderColor="{AppThemeBinding Light=#E5E7EB, Dark=#334155}"
-               CornerRadius="18"
-               Padding="18"
-               Margin="14"
-               VerticalOptions="End"
-               HasShadow="False">
-
-            <VerticalStackLayout Spacing="14">
-                <Label Text="My Reserved Parking"
-                       FontSize="20"
-                       FontAttributes="Bold"
-                       TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
-
-                <Frame HasShadow="False"
-                       BackgroundColor="{AppThemeBinding Light=#F9FAFB, Dark=#111827}"
-                       BorderColor="{AppThemeBinding Light=#E5E7EB, Dark=#334155}"
-                       CornerRadius="12"
-                       Padding="12">
-                    <VerticalStackLayout Spacing="8">
-                        <Label x:Name="ReservedLocationLabel"
-                               Text="Location"
-                               FontSize="14"
-                               TextColor="{AppThemeBinding Light=#374151, Dark=#E5E7EB}" />
-
-                        <Label x:Name="ReservedSlotLabel"
-                               Text="Slot"
-                               FontSize="14"
-                               TextColor="{AppThemeBinding Light=#374151, Dark=#E5E7EB}" />
-
-                        <Label x:Name="ReservedStatusLabel"
-                               Text="Status"
-                               FontSize="14"
-                               TextColor="{AppThemeBinding Light=#374151, Dark=#E5E7EB}" />
-
-                        <Label x:Name="ReservedExpiryLabel"
-                               Text="Expires At"
-                               FontSize="14"
-                               TextColor="{AppThemeBinding Light=#374151, Dark=#E5E7EB}" />
-                    </VerticalStackLayout>
+                <!-- selected place badge -->
+                <Frame Grid.Row="1"
+                       Grid.ColumnSpan="3"
+                       Margin="0,16,0,0"
+                       Padding="12,8"
+                       CornerRadius="14"
+                       HasShadow="False"
+                       BackgroundColor="#CC111827"
+                       HorizontalOptions="Start">
+                    <Label x:Name="SelectedLocationTitleLabel"
+                           Text="Nearby Parking Map"
+                           FontSize="14"
+                           FontAttributes="Bold"
+                           TextColor="White" />
                 </Frame>
+            </Grid>
+        </Grid>
 
-                <HorizontalStackLayout Spacing="10">
-                    <Button Text="Navigate"
-                            Clicked="NavigateReserved_Clicked"
-                            HorizontalOptions="FillAndExpand"
-                            BackgroundColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
-                            TextColor="{AppThemeBinding Light=White, Dark=#111827}"
+        <!-- CONTENT -->
+        <Border Grid.Row="1"
+                StrokeThickness="0"
+                BackgroundColor="{AppThemeBinding Light=#F8F9FB, Dark=#0F172A}"
+                StrokeShape="RoundRectangle 26,26,0,0"
+                Margin="0,-18,0,0">
+
+            <ScrollView>
+                <VerticalStackLayout Padding="14,18,14,14"
+                                     Spacing="16">
+
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Available Parking Locations"
+                               FontSize="24"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+
+                        <Label Text="Tap a parking card to move the map to that area."
+                               FontSize="13"
+                               TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+                    </VerticalStackLayout>
+
+                    <CollectionView x:Name="ParkingLocationsCollectionView"
+                                    SelectionMode="None">
+                        <CollectionView.EmptyView>
+                            <VerticalStackLayout Padding="20" Spacing="6">
+                                <Label Text="No parking locations found."
+                                       FontSize="16"
+                                       HorizontalOptions="Center"
+                                       TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+                                <Label Text="Please try again later."
+                                       FontSize="13"
+                                       HorizontalOptions="Center"
+                                       TextColor="{AppThemeBinding Light=#9CA3AF, Dark=#94A3B8}" />
+                            </VerticalStackLayout>
+                        </CollectionView.EmptyView>
+
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Frame Margin="0,0,0,12"
+                                       Padding="14"
+                                       CornerRadius="16"
+                                       HasShadow="False"
+                                       BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
+                                       BorderColor="{AppThemeBinding Light=#E5E7EB, Dark=#334155}">
+
+                                    <Frame.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="ParkingCard_Tapped"
+                                                              CommandParameter="{Binding .}" />
+                                    </Frame.GestureRecognizers>
+
+                                    <VerticalStackLayout Spacing="10">
+                                        <Label Text="{Binding Name}"
+                                               FontSize="17"
+                                               FontAttributes="Bold"
+                                               TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+
+                                        <Label Text="{Binding Description}"
+                                               FontSize="13"
+                                               LineBreakMode="WordWrap"
+                                               TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+
+                                        <Button Text="View Slots"
+                                                Clicked="ViewSlots_Clicked"
+                                                CommandParameter="{Binding .}"
+                                                BackgroundColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                                                TextColor="{AppThemeBinding Light=White, Dark=#111827}"
+                                                CornerRadius="10"
+                                                HeightRequest="42" />
+                                    </VerticalStackLayout>
+                                </Frame>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+
+                    <!-- old banner can stay if gusto mo pa -->
+                    <Frame x:Name="NavigationBanner"
+                           IsVisible="False"
+                           BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
+                           BorderColor="{AppThemeBinding Light=#D1FAE5, Dark=#14532D}"
+                           HasShadow="False"
+                           CornerRadius="14"
+                           Padding="12"
+                           Margin="0,4,0,10">
+
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="You are navigating"
+                                       FontAttributes="Bold"
+                                       FontSize="14"
+                                       TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+                                <Label x:Name="NavigationBannerLabel"
+                                       Text="Tap to return to navigation"
+                                       FontSize="12"
+                                       TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+                            </VerticalStackLayout>
+
+                            <Button Grid.Column="1"
+                                    Text="Open"
+                                    Clicked="OpenNavigationBanner_Clicked"
+                                    BackgroundColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                                    TextColor="{AppThemeBinding Light=White, Dark=#111827}"
+                                    CornerRadius="10"
+                                    Padding="14,8" />
+                        </Grid>
+                    </Frame>
+
+                </VerticalStackLayout>
+            </ScrollView>
+        </Border>
+
+        <!-- RESERVED OVERLAY -->
+        <Grid x:Name="ReservedOverlay"
+              Grid.RowSpan="2"
+              IsVisible="False"
+              BackgroundColor="#66000000"
+              InputTransparent="False">
+
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Tapped="ReservedOverlay_Tapped" />
+            </Grid.GestureRecognizers>
+
+            <Frame x:Name="ReservedPanel"
+                   VerticalOptions="End"
+                   Margin="14"
+                   Padding="18"
+                   CornerRadius="20"
+                   HasShadow="False"
+                   BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
+                   BorderColor="{AppThemeBinding Light=#E5E7EB, Dark=#334155}"
+                   TranslationY="320">
+
+                <VerticalStackLayout Spacing="14">
+                    <Label Text="My Reserved Parking"
+                           FontSize="20"
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+
+                    <Frame HasShadow="False"
+                           BackgroundColor="{AppThemeBinding Light=#F9FAFB, Dark=#111827}"
+                           BorderColor="{AppThemeBinding Light=#E5E7EB, Dark=#334155}"
+                           CornerRadius="12"
+                           Padding="12">
+                        <VerticalStackLayout Spacing="8">
+                            <Label x:Name="ReservedLocationLabel"
+                                   Text="Location"
+                                   FontSize="14"
+                                   TextColor="{AppThemeBinding Light=#374151, Dark=#E5E7EB}" />
+
+                            <Label x:Name="ReservedSlotLabel"
+                                   Text="Slot"
+                                   FontSize="14"
+                                   TextColor="{AppThemeBinding Light=#374151, Dark=#E5E7EB}" />
+
+                            <Label x:Name="ReservedStatusLabel"
+                                   Text="Status"
+                                   FontSize="14"
+                                   TextColor="{AppThemeBinding Light=#374151, Dark=#E5E7EB}" />
+
+                            <Label x:Name="ReservedExpiryLabel"
+                                   Text="Expires At"
+                                   FontSize="14"
+                                   TextColor="{AppThemeBinding Light=#374151, Dark=#E5E7EB}" />
+                        </VerticalStackLayout>
+                    </Frame>
+
+                    <HorizontalStackLayout Spacing="10">
+                        <Button Text="Navigate"
+                                Clicked="NavigateReserved_Clicked"
+                                HorizontalOptions="FillAndExpand"
+                                BackgroundColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                                TextColor="{AppThemeBinding Light=White, Dark=#111827}"
+                                CornerRadius="10"
+                                HeightRequest="44" />
+
+                        <Button Text="Cancel"
+                                Clicked="CancelReserved_Clicked"
+                                HorizontalOptions="FillAndExpand"
+                                BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
+                                TextColor="{AppThemeBinding Light=#B91C1C, Dark=#FCA5A5}"
+                                BorderColor="{AppThemeBinding Light=#FCA5A5, Dark=#7F1D1D}"
+                                BorderWidth="1"
+                                CornerRadius="10"
+                                HeightRequest="44" />
+                    </HorizontalStackLayout>
+
+                    <Button Text="Close"
+                            Clicked="CloseReservedPanel_Clicked"
+                            BackgroundColor="{AppThemeBinding Light=#F3F4F6, Dark=#111827}"
+                            TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
                             CornerRadius="10"
-                            HeightRequest="44" />
-
-                    <Button Text="Cancel"
-                            Clicked="CancelReserved_Clicked"
-                            HorizontalOptions="FillAndExpand"
-                            BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
-                            TextColor="{AppThemeBinding Light=#B91C1C, Dark=#FCA5A5}"
-                            BorderColor="{AppThemeBinding Light=#FCA5A5, Dark=#7F1D1D}"
-                            BorderWidth="1"
-                            CornerRadius="10"
-                            HeightRequest="44" />
-                </HorizontalStackLayout>
-
-                <Button Text="Close"
-                        Clicked="CloseReservedPanel_Clicked"
-                        BackgroundColor="{AppThemeBinding Light=#F3F4F6, Dark=#111827}"
-                        TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
-                        CornerRadius="10"
-                        HeightRequest="42" />
-            </VerticalStackLayout>
-        </Frame>
+                            HeightRequest="42" />
+                </VerticalStackLayout>
+            </Frame>
+        </Grid>
 
     </Grid>
 </ContentPage>

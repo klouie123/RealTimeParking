@@ -5,9 +5,9 @@
              Title="Parking Slots"
              BackgroundColor="{AppThemeBinding Light=#F8F9FB, Dark=#0F172A}">
 
-    <Grid Padding="20">
+    <Grid>
         <ScrollView>
-            <VerticalStackLayout Spacing="18">
+            <VerticalStackLayout Padding="20" Spacing="18">
 
                 <VerticalStackLayout Spacing="4">
                     <Label x:Name="LocationNameLabel"
@@ -16,57 +16,127 @@
                            FontAttributes="Bold"
                            TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
 
-                    <Label Text="Choose an available slot to reserve"
+                    <Label Text="Tap an available slot to reserve it."
                            FontSize="13"
                            TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
                 </VerticalStackLayout>
 
                 <CollectionView x:Name="SlotsCollectionView"
                                 SelectionMode="None">
+                    <CollectionView.ItemsLayout>
+                        <GridItemsLayout Orientation="Vertical"
+                                         Span="2"
+                                         VerticalItemSpacing="12"
+                                         HorizontalItemSpacing="12" />
+                    </CollectionView.ItemsLayout>
+
                     <CollectionView.ItemTemplate>
                         <DataTemplate>
-                            <Frame Margin="0,0,0,12"
-                                   Padding="14"
-                                   CornerRadius="14"
+                            <Frame Padding="14"
+                                   CornerRadius="16"
                                    HasShadow="False"
-                                   BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
-                                   BorderColor="{AppThemeBinding Light=#E5E7EB, Dark=#334155}">
+                                   BackgroundColor="{Binding SlotBackgroundColor}"
+                                   BorderColor="{Binding SlotBorderColor}"
+                                   Opacity="{Binding SlotOpacity}">
+
+                                <Frame.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="SlotCard_Tapped"
+                                                          CommandParameter="{Binding .}" />
+                                </Frame.GestureRecognizers>
 
                                 <VerticalStackLayout Spacing="10">
-                                    <Label Text="{Binding SlotCode}"
-                                           FontSize="18"
-                                           FontAttributes="Bold"
-                                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
 
-                                    <Label Text="{Binding Status}"
-                                           FontSize="14"
-                                           TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <Label Text="{Binding SlotCode}"
+                                               FontSize="18"
+                                               FontAttributes="Bold"
+                                               TextColor="{Binding SlotTextColor}" />
 
-                                    <Button Text="Reserve"
-                                            Clicked="ReserveButton_Clicked"
-                                            CommandParameter="{Binding .}"
-                                            BackgroundColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
-                                            TextColor="{AppThemeBinding Light=White, Dark=#111827}"
-                                            CornerRadius="10"
-                                            HeightRequest="42" />
+                                        <Frame Grid.Column="1"
+                                               Padding="8,4"
+                                               CornerRadius="10"
+                                               HasShadow="False"
+                                               BackgroundColor="{Binding StatusBadgeColor}">
+                                            <Label Text="{Binding Status}"
+                                                   FontSize="11"
+                                                   FontAttributes="Bold"
+                                                   TextColor="White" />
+                                        </Frame>
+                                    </Grid>
+
+                                    <Label Text="{Binding SlotMessage}"
+                                           FontSize="12"
+                                           LineBreakMode="WordWrap"
+                                           TextColor="{Binding SlotSubTextColor}" />
+
                                 </VerticalStackLayout>
                             </Frame>
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
                 </CollectionView>
 
-                <Button x:Name="NavigateButton"
-                        Text="Navigate to Reserved Parking"
-                        IsVisible="False"
-                        Clicked="NavigateButton_Clicked"
-                        BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
-                        TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
-                        BorderColor="{AppThemeBinding Light=#D1D5DB, Dark=#334155}"
-                        BorderWidth="1"
-                        CornerRadius="12"
-                        HeightRequest="46" />
-
             </VerticalStackLayout>
         </ScrollView>
+
+        <!-- Bottom popup / action sheet -->
+        <Grid x:Name="ReservePopupOverlay"
+              IsVisible="False"
+              BackgroundColor="#66000000"
+              InputTransparent="False">
+
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Tapped="ReservePopupOverlay_Tapped" />
+            </Grid.GestureRecognizers>
+
+            <Frame x:Name="ReservePopupPanel"
+                   VerticalOptions="End"
+                   Margin="14"
+                   Padding="18"
+                   CornerRadius="20"
+                   HasShadow="False"
+                   BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
+                   BorderColor="{AppThemeBinding Light=#E5E7EB, Dark=#334155}"
+                   TranslationY="300">
+
+                <VerticalStackLayout Spacing="14">
+                    <Label Text="Reserve Parking Slot"
+                           FontSize="20"
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+
+                    <Label x:Name="PopupSlotCodeLabel"
+                           Text="Slot A1"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+
+                    <Label x:Name="PopupSlotMessageLabel"
+                           Text="Do you want to reserve this slot?"
+                           FontSize="13"
+                           TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+
+                    <HorizontalStackLayout Spacing="10">
+                        <Button Text="Cancel"
+                                Clicked="CancelReservePopup_Clicked"
+                                HorizontalOptions="FillAndExpand"
+                                BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
+                                TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                                BorderColor="{AppThemeBinding Light=#D1D5DB, Dark=#334155}"
+                                BorderWidth="1"
+                                CornerRadius="12"
+                                HeightRequest="46" />
+
+                        <Button Text="Reserve"
+                                Clicked="ConfirmReserveButton_Clicked"
+                                HorizontalOptions="FillAndExpand"
+                                BackgroundColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                                TextColor="{AppThemeBinding Light=White, Dark=#111827}"
+                                CornerRadius="12"
+                                HeightRequest="46" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Frame>
+        </Grid>
+
     </Grid>
 </ContentPage>

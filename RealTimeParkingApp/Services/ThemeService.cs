@@ -1,5 +1,6 @@
-﻿using Microsoft.Maui.Storage;
+﻿using Microsoft.Maui;
 using Microsoft.Maui.ApplicationModel;
+using Microsoft.Maui.Storage;
 
 namespace RealTimeParkingApp.Services
 {
@@ -34,7 +35,7 @@ namespace RealTimeParkingApp.Services
                     ? Application.Current?.RequestedTheme ?? AppTheme.Light
                     : theme;
 
-                activity.UpdateSystemBars(actualTheme);
+                //activity.UpdateSystemBars(actualTheme);
             }
 #endif
         }

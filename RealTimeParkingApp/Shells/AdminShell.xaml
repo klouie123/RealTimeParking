@@ -2,7 +2,6 @@
 <Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
        x:Class="RealTimeParkingApp.Shells.AdminShell"
-       xmlns:views="clr-namespace:RealTimeParkingApp.Views"
        Title="RealTimeParkingApp"
        Shell.BackgroundColor="{AppThemeBinding Light=White, Dark=#0F172A}"
        Shell.ForegroundColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
@@ -17,8 +16,8 @@
        Shell.NavBarHasShadow="False">
 
     <TabBar>
-        <ShellContent Title="Dashboard"
-                      Route="AdminDashboardPage"
-                      ContentTemplate="{DataTemplate views:AdminDashboardPage}" />
+        <ShellContent x:Name="AdminDashboardContent"
+                      Title="Dashboard"
+                      Route="AdminDashboardPage" />
     </TabBar>
 </Shell>

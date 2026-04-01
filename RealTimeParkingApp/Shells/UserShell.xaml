@@ -2,7 +2,6 @@
 <Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
        x:Class="RealTimeParkingApp.Shells.UserShell"
-       xmlns:views="clr-namespace:RealTimeParkingApp.Views"
        Title="RealTimeParkingApp"
        Shell.BackgroundColor="{AppThemeBinding Light=White, Dark=#0F172A}"
        Shell.ForegroundColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
@@ -17,14 +16,14 @@
        Shell.NavBarHasShadow="False">
 
     <TabBar>
-        <ShellContent Title="Home"
+        <ShellContent x:Name="UserDashboardContent"
+                      Title="Home"
                       Icon="ic_fluent_home_24_filled.png"
-                      Route="UserDashboardPage"
-                      ContentTemplate="{DataTemplate views:UserDashboardPage}" />
+                      Route="UserDashboardPage" />
 
-        <ShellContent Title="Profile"
+        <ShellContent x:Name="ProfileContent"
+                      Title="Profile"
                       Icon="ic_fluent_person_24_filled.png"
-                      Route="ProfilePage"
-                      ContentTemplate="{DataTemplate views:ProfilePage}" />
+                      Route="ProfilePage" />
     </TabBar>
 </Shell>

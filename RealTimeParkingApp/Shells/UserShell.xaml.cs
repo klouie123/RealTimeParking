@@ -1,16 +1,18 @@
-using MauiIcons.Core;
-using MauiIcons.Fluent;
 using RealTimeParkingApp.Views;
 
 namespace RealTimeParkingApp.Shells;
 
 public partial class UserShell : Shell
 {
-	public UserShell()
-	{
-		InitializeComponent();
+    public UserShell()
+    {
+        InitializeComponent();
 
-        _ = new MauiIcon();
+        UserDashboardContent.ContentTemplate =
+            new DataTemplate(() => App.Services.GetRequiredService<UserDashboardPage>());
+
+        ProfileContent.ContentTemplate =
+            new DataTemplate(() => App.Services.GetRequiredService<ProfilePage>());
 
         Routing.RegisterRoute(nameof(MapPage), typeof(MapPage));
         Routing.RegisterRoute(nameof(NavigationMapPage), typeof(NavigationMapPage));
