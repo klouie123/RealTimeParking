@@ -6,6 +6,11 @@ using RealTimeParkingApp.Services;
 using RealTimeParkingApp.ViewModels;
 using RealTimeParkingApp.Views;
 
+#if ANDROID
+using Microsoft.Maui.Controls.PlatformConfiguration;
+using Microsoft.Maui.Controls.PlatformConfiguration.AndroidSpecific;
+#endif
+
 namespace RealTimeParkingApp
 {
     public static class MauiProgram

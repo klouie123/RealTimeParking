@@ -1,4 +1,5 @@
 ﻿<?xml version="1.0" encoding="UTF-8" ?>
+<?xaml-comp compile="true" ?>
 <ResourceDictionary 
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
@@ -429,6 +430,83 @@
         <Setter Property="BarTextColor" Value="{AppThemeBinding Light={StaticResource Magenta}, Dark={StaticResource White}}" />
         <Setter Property="UnselectedTabColor" Value="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray950}}" />
         <Setter Property="SelectedTabColor" Value="{AppThemeBinding Light={StaticResource Gray950}, Dark={StaticResource Gray200}}" />
+    </Style>
+
+    <Style TargetType="ContentPage">
+        <Setter Property="BackgroundColor"
+                Value="{AppThemeBinding Light=#F8F9FB, Dark=#0F172A}" />
+    </Style>
+
+    <Style x:Key="PageTitleLabelStyle" TargetType="Label">
+        <Setter Property="FontSize" Value="26" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor"
+                Value="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+    </Style>
+
+    <Style x:Key="SectionLabelStyle" TargetType="Label">
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="TextColor"
+                Value="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+    </Style>
+
+    <Style x:Key="ValueLabelStyle" TargetType="Label">
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="TextColor"
+                Value="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+    </Style>
+
+    <Style TargetType="Frame">
+        <Setter Property="HasShadow" Value="False" />
+        <Setter Property="CornerRadius" Value="16" />
+        <Setter Property="Padding" Value="16" />
+        <Setter Property="BackgroundColor"
+                Value="{AppThemeBinding Light=White, Dark=#1E293B}" />
+        <Setter Property="BorderColor"
+                Value="{AppThemeBinding Light=#E5E7EB, Dark=#334155}" />
+    </Style>
+
+    <Style TargetType="Entry">
+        <Setter Property="BackgroundColor"
+                Value="{AppThemeBinding Light=#F9FAFB, Dark=#111827}" />
+        <Setter Property="TextColor"
+                Value="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+        <Setter Property="PlaceholderColor"
+                Value="{AppThemeBinding Light=#9CA3AF, Dark=#94A3B8}" />
+        <Setter Property="HeightRequest" Value="48" />
+    </Style>
+
+    <Style x:Key="PrimaryButtonStyle" TargetType="Button">
+        <Setter Property="BackgroundColor"
+                Value="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+        <Setter Property="TextColor"
+                Value="{AppThemeBinding Light=White, Dark=#111827}" />
+        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="HeightRequest" Value="48" />
+    </Style>
+
+    <Style x:Key="SecondaryButtonStyle" TargetType="Button">
+        <Setter Property="BackgroundColor"
+                Value="{AppThemeBinding Light=White, Dark=#1E293B}" />
+        <Setter Property="TextColor"
+                Value="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+        <Setter Property="BorderColor"
+                Value="{AppThemeBinding Light=#E5E7EB, Dark=#334155}" />
+        <Setter Property="BorderWidth" Value="1" />
+        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="HeightRequest" Value="48" />
+    </Style>
+
+    <Style x:Key="DangerButtonStyle" TargetType="Button">
+        <Setter Property="BackgroundColor"
+                Value="{AppThemeBinding Light=White, Dark=#1E293B}" />
+        <Setter Property="TextColor"
+                Value="{AppThemeBinding Light=#B91C1C, Dark=#FCA5A5}" />
+        <Setter Property="BorderColor"
+                Value="{AppThemeBinding Light=#FCA5A5, Dark=#7F1D1D}" />
+        <Setter Property="BorderWidth" Value="1" />
+        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="HeightRequest" Value="48" />
     </Style>
 
 </ResourceDictionary>

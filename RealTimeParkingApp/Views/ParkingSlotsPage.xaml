@@ -2,31 +2,53 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="RealTimeParkingApp.Views.ParkingSlotsPage"
-             Title="ParkingSlotsPage">
+             Title="Parking Slots"
+             BackgroundColor="{AppThemeBinding Light=#F8F9FB, Dark=#0F172A}">
 
     <Grid Padding="20">
         <ScrollView>
-            <VerticalStackLayout Spacing="15">
-                <Label x:Name="LocationNameLabel"
-                       Text="Parking Location"
-                       FontSize="24"
-                       FontAttributes="Bold" />
+            <VerticalStackLayout Spacing="18">
 
-                <CollectionView x:Name="SlotsCollectionView">
+                <VerticalStackLayout Spacing="4">
+                    <Label x:Name="LocationNameLabel"
+                           Text="Parking Location"
+                           FontSize="24"
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+
+                    <Label Text="Choose an available slot to reserve"
+                           FontSize="13"
+                           TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+                </VerticalStackLayout>
+
+                <CollectionView x:Name="SlotsCollectionView"
+                                SelectionMode="None">
                     <CollectionView.ItemTemplate>
                         <DataTemplate>
-                            <Frame Margin="5" Padding="10" CornerRadius="12">
-                                <VerticalStackLayout Spacing="8">
+                            <Frame Margin="0,0,0,12"
+                                   Padding="14"
+                                   CornerRadius="14"
+                                   HasShadow="False"
+                                   BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
+                                   BorderColor="{AppThemeBinding Light=#E5E7EB, Dark=#334155}">
+
+                                <VerticalStackLayout Spacing="10">
                                     <Label Text="{Binding SlotCode}"
                                            FontSize="18"
-                                           FontAttributes="Bold" />
+                                           FontAttributes="Bold"
+                                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
 
                                     <Label Text="{Binding Status}"
-                                           FontSize="14" />
+                                           FontSize="14"
+                                           TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
 
                                     <Button Text="Reserve"
                                             Clicked="ReserveButton_Clicked"
-                                            CommandParameter="{Binding .}" />
+                                            CommandParameter="{Binding .}"
+                                            BackgroundColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                                            TextColor="{AppThemeBinding Light=White, Dark=#111827}"
+                                            CornerRadius="10"
+                                            HeightRequest="42" />
                                 </VerticalStackLayout>
                             </Frame>
                         </DataTemplate>
@@ -36,7 +58,14 @@
                 <Button x:Name="NavigateButton"
                         Text="Navigate to Reserved Parking"
                         IsVisible="False"
-                        Clicked="NavigateButton_Clicked" />
+                        Clicked="NavigateButton_Clicked"
+                        BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
+                        TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                        BorderColor="{AppThemeBinding Light=#D1D5DB, Dark=#334155}"
+                        BorderWidth="1"
+                        CornerRadius="12"
+                        HeightRequest="46" />
+
             </VerticalStackLayout>
         </ScrollView>
     </Grid>

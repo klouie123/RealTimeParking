@@ -2,34 +2,78 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="RealTimeParkingApp.Views.LoginPage"
-             Shell.NavBarIsVisible="False">
+             NavigationPage.HasNavigationBar="False"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="{AppThemeBinding Light=#F8F9FB, Dark=#0F172A}">
 
-    <StackLayout Padding="20" Spacing="15" VerticalOptions="Center">
-        <Label Text="Welcome to Real-Time Parking App"
-               FontSize="24"
-               HorizontalOptions="Center" />
+    <Grid Padding="20">
+        <VerticalStackLayout Spacing="20"
+                             VerticalOptions="Center">
 
-        <Entry x:Name="UsernameOrEmailEntry"
-               Placeholder="Username or Email" />
+            <VerticalStackLayout Spacing="4">
+                <Label Text="Welcome Back"
+                       FontSize="28"
+                       FontAttributes="Bold"
+                       HorizontalOptions="Center"
+                       TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
 
-        <Entry x:Name="PasswordEntry"
-               Placeholder="Password"
-               IsPassword="True" />
+                <Label Text="Sign in to continue to Real-Time Parking"
+                       FontSize="13"
+                       HorizontalOptions="Center"
+                       TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+            </VerticalStackLayout>
 
-        <ActivityIndicator x:Name="LoginLoadingIndicator"
-                           IsRunning="False"
+            <Frame CornerRadius="16"
+                   Padding="18"
+                   HasShadow="False"
+                   BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
+                   BorderColor="{AppThemeBinding Light=#E5E7EB, Dark=#334155}">
+
+                <VerticalStackLayout Spacing="14">
+
+                    <Entry x:Name="UsernameOrEmailEntry"
+                           Placeholder="Username or Email"
+                           BackgroundColor="{AppThemeBinding Light=#F9FAFB, Dark=#111827}"
+                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                           PlaceholderColor="{AppThemeBinding Light=#9CA3AF, Dark=#94A3B8}" />
+
+                    <Entry x:Name="PasswordEntry"
+                           Placeholder="Password"
+                           IsPassword="True"
+                           BackgroundColor="{AppThemeBinding Light=#F9FAFB, Dark=#111827}"
+                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                           PlaceholderColor="{AppThemeBinding Light=#9CA3AF, Dark=#94A3B8}" />
+
+                    <ActivityIndicator x:Name="LoginLoadingIndicator"
+                                       IsRunning="False"
+                                       IsVisible="False"
+                                       HorizontalOptions="Center"
+                                       Color="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+
+                    <Button x:Name="LoginButton"
+                            Text="Login"
+                            Clicked="LoginButton_Clicked"
+                            BackgroundColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                            TextColor="{AppThemeBinding Light=White, Dark=#111827}"
+                            CornerRadius="12"
+                            HeightRequest="48" />
+
+                    <Button Text="Register"
+                            Clicked="RegisterButton_Clicked"
+                            BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
+                            TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                            BorderColor="{AppThemeBinding Light=#D1D5DB, Dark=#334155}"
+                            BorderWidth="1"
+                            CornerRadius="12"
+                            HeightRequest="48" />
+
+                    <Label x:Name="ErrorLabel"
+                           TextColor="{AppThemeBinding Light=#B91C1C, Dark=#FCA5A5}"
                            IsVisible="False"
-                           HorizontalOptions="Center" />
+                           FontSize="13" />
 
-        <Button x:Name="LoginButton"
-                Text="Login"
-                Clicked="LoginButton_Clicked" />
-
-        <Button Text="Register"
-                Clicked="RegisterButton_Clicked" />
-
-        <Label x:Name="ErrorLabel"
-               TextColor="Red"
-               IsVisible="False"/>
-    </StackLayout>
+                </VerticalStackLayout>
+            </Frame>
+        </VerticalStackLayout>
+    </Grid>
 </ContentPage>

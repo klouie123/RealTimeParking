@@ -4,74 +4,63 @@
              xmlns:maps="clr-namespace:Microsoft.Maui.Controls.Maps;assembly=Microsoft.Maui.Controls.Maps"
              xmlns:vm="clr-namespace:RealTimeParkingApp.ViewModels"
              x:Class="RealTimeParkingApp.Views.MapPage"
-             Title="MapPage">
+             Title="Map">
 
     <Grid>
-
-        <!-- MAP BACKGROUND -->
         <maps:Map x:Name="map"
-              IsShowingUser="True" />
+                  IsShowingUser="True" />
 
-        <!-- BOTTOM PANEL -->
-        <Frame BackgroundColor="White"
-           CornerRadius="25"
-           Padding="10"
-           HasShadow="True"
-           VerticalOptions="End"
-           HeightRequest="300">
+        <Frame BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
+               BorderColor="{AppThemeBinding Light=#E5E7EB, Dark=#334155}"
+               CornerRadius="24"
+               Padding="12"
+               HasShadow="False"
+               VerticalOptions="End"
+               Margin="12"
+               HeightRequest="320">
 
-            <CollectionView ItemsSource="{Binding Parkings}">
+            <CollectionView ItemsSource="{Binding Parkings}"
+                            SelectionMode="None">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
-                        <Frame Margin="5"
-                           Padding="10"
-                           BorderColor="{Binding IsSelected, Converter={StaticResource BoolToColorConverter}}"
-                           CornerRadius="10">
+                        <Frame Margin="0,0,0,10"
+                               Padding="12"
+                               CornerRadius="12"
+                               HasShadow="False"
+                               BackgroundColor="{AppThemeBinding Light=#F9FAFB, Dark=#111827}"
+                               BorderColor="{Binding IsSelected, Converter={StaticResource BoolToColorConverter}}">
 
-                            <StackLayout>
-
-                                <StackLayout Spacing="5">
-
-                                    <!-- NAME -->
-                                    <Label Text="{Binding Name}"
+                            <VerticalStackLayout Spacing="8">
+                                <Label Text="{Binding Name}"
                                        FontSize="16"
-                                       FontAttributes="Bold" />
+                                       FontAttributes="Bold"
+                                       TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
 
-                                    <!-- DESCRIPTION -->
-                                    <Label Text="{Binding Description}"
+                                <Label Text="{Binding Description}"
                                        FontSize="13"
-                                       TextColor="Gray" />
+                                       TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
 
-                                    <!-- DISTANCE -->
-                                    <Label Text="{Binding Distance, StringFormat='Distance: {0:F2} km'}"
+                                <Label Text="{Binding Distance, StringFormat='Distance: {0:F2} km'}"
                                        FontSize="12"
-                                       TextColor="Green" />
-
-                                </StackLayout>
+                                       TextColor="{AppThemeBinding Light=#16A34A, Dark=#4ADE80}" />
 
                                 <Button Text="Navigate"
-                                        BackgroundColor="Green"
-                                        TextColor="White"
-                                        CornerRadius="15"
-                                        Margin="10"
+                                        BackgroundColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                                        TextColor="{AppThemeBinding Light=White, Dark=#111827}"
+                                        CornerRadius="12"
+                                        Margin="0,6,0,0"
                                         Clicked="OnNavigateClicked"
                                         CommandParameter="{Binding .}" />
-                            </StackLayout>
+                            </VerticalStackLayout>
 
-                            <!-- CLICK ITEM -->
                             <Frame.GestureRecognizers>
-                                <TapGestureRecognizer
-                                Tapped="OnParkingTapped"
-                                CommandParameter="{Binding .}" />
+                                <TapGestureRecognizer Tapped="OnParkingTapped"
+                                                      CommandParameter="{Binding .}" />
                             </Frame.GestureRecognizers>
-
-                            
                         </Frame>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
-
         </Frame>
-
     </Grid>
 </ContentPage>

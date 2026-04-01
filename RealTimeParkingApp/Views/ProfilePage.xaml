@@ -2,32 +2,110 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="RealTimeParkingApp.Views.ProfilePage"
-             Title="Profile">
+             Title="Profile"
+             BackgroundColor="{AppThemeBinding Light=#F8F9FB, Dark=#0F172A}">
 
     <ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="18">
-            <Label Text="My Profile"
-                   FontSize="26"
-                   FontAttributes="Bold"
-                   HorizontalOptions="Center" />
+        <VerticalStackLayout Padding="20" Spacing="20">
 
-            <Frame CornerRadius="16" Padding="16">
+            <VerticalStackLayout Spacing="4">
+                <Label Text="My Profile"
+                       FontSize="26"
+                       FontAttributes="Bold"
+                       HorizontalOptions="Center"
+                       TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+
+                <Label Text="View your account details"
+                       FontSize="13"
+                       HorizontalOptions="Center"
+                       TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+            </VerticalStackLayout>
+
+            <Frame CornerRadius="16"
+                   Padding="18"
+                   HasShadow="False"
+                   BorderColor="{AppThemeBinding Light=#E5E7EB, Dark=#334155}"
+                   BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}">
+
+                <VerticalStackLayout Spacing="14">
+
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Username"
+                               FontAttributes="Bold"
+                               FontSize="13"
+                               TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+                        <Label x:Name="UsernameValueLabel"
+                               FontSize="16"
+                               TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+                    </VerticalStackLayout>
+
+                    <BoxView HeightRequest="1"
+                             Color="{AppThemeBinding Light=#F1F5F9, Dark=#334155}" />
+
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Email"
+                               FontAttributes="Bold"
+                               FontSize="13"
+                               TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+                        <Label x:Name="EmailValueLabel"
+                               FontSize="16"
+                               TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+                    </VerticalStackLayout>
+
+                    <BoxView HeightRequest="1"
+                             Color="{AppThemeBinding Light=#F1F5F9, Dark=#334155}" />
+
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Role"
+                               FontAttributes="Bold"
+                               FontSize="13"
+                               TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+                        <Label x:Name="RoleValueLabel"
+                               FontSize="16"
+                               TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Frame>
+
+            <Frame CornerRadius="16"
+                   Padding="18"
+                   HasShadow="False"
+                   BorderColor="{AppThemeBinding Light=#E5E7EB, Dark=#334155}"
+                   BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}">
+
                 <VerticalStackLayout Spacing="10">
-                    <Label Text="Username" FontAttributes="Bold" />
-                    <Label x:Name="UsernameValueLabel" />
+                    <Label Text="Appearance"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
 
-                    <Label Text="Email" FontAttributes="Bold" />
-                    <Label x:Name="EmailValueLabel" />
+                    <Label Text="Choose app theme"
+                           FontSize="13"
+                           TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
 
-                    <Label Text="Role" FontAttributes="Bold" />
-                    <Label x:Name="RoleValueLabel" />
+                    <Picker x:Name="ThemePicker"
+                            Title="Select Theme"
+                            SelectedIndexChanged="ThemePicker_SelectedIndexChanged"
+                            TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                            BackgroundColor="{AppThemeBinding Light=#F9FAFB, Dark=#0F172A}">
+                        <Picker.Items>
+                            <x:String>System</x:String>
+                            <x:String>Light</x:String>
+                            <x:String>Dark</x:String>
+                        </Picker.Items>
+                    </Picker>
                 </VerticalStackLayout>
             </Frame>
 
             <Button Text="Logout"
-                    BackgroundColor="Red"
-                    TextColor="White"
+                    BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
+                    TextColor="#B91C1C"
+                    BorderColor="{AppThemeBinding Light=#FCA5A5, Dark=#7F1D1D}"
+                    BorderWidth="1"
+                    CornerRadius="12"
+                    HeightRequest="48"
                     Clicked="LogoutButton_Clicked" />
+
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

@@ -3,23 +3,42 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="RealTimeParkingApp.Views.StartupPage"
              Shell.NavBarIsVisible="False"
-             BackgroundColor="White">
+             NavigationPage.HasNavigationBar="False"
+             BackgroundColor="{AppThemeBinding Light=#F8F9FB, Dark=#0F172A}">
 
-    <Grid Padding="20">
-        <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="20">
-            <Label Text="Real-Time Parking App"
-                   FontSize="26"
-                   FontAttributes="Bold"
-                   HorizontalOptions="Center" />
+    <Grid Padding="24">
+        <VerticalStackLayout VerticalOptions="Center"
+                             HorizontalOptions="Center"
+                             Spacing="18">
 
-            <ActivityIndicator IsRunning="True"
-                               WidthRequest="50"
-                               HeightRequest="50"
-                               HorizontalOptions="Center" />
+            <Frame BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
+                   BorderColor="{AppThemeBinding Light=#E5E7EB, Dark=#334155}"
+                   CornerRadius="20"
+                   Padding="30"
+                   HasShadow="False">
 
-            <Label Text="Loading..."
-                   FontSize="16"
-                   HorizontalOptions="Center" />
+                <VerticalStackLayout Spacing="18"
+                                     HorizontalOptions="Center">
+
+                    <Label Text="Real-Time Parking App"
+                           FontSize="26"
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                           HorizontalOptions="Center" />
+
+                    <ActivityIndicator IsRunning="True"
+                                       Color="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                                       WidthRequest="42"
+                                       HeightRequest="42"
+                                       HorizontalOptions="Center" />
+
+                    <Label Text="Loading..."
+                           FontSize="14"
+                           TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}"
+                           HorizontalOptions="Center" />
+
+                </VerticalStackLayout>
+            </Frame>
         </VerticalStackLayout>
     </Grid>
 </ContentPage>

@@ -3,7 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:maps="clr-namespace:Microsoft.Maui.Controls.Maps;assembly=Microsoft.Maui.Controls.Maps"
              x:Class="RealTimeParkingApp.Views.NavigationMapPage"
-             Title="NavigationPage">
+             Title="Navigation"
+             BackgroundColor="{AppThemeBinding Light=#F8F9FB, Dark=#0F172A}">
 
     <Grid RowDefinitions="*,Auto,Auto">
 
@@ -12,63 +13,74 @@
                   IsShowingUser="True" />
 
         <Frame Grid.Row="1"
-               Margin="10,10,10,5"
-               Padding="12"
+               Margin="12,12,12,6"
+               Padding="14"
                CornerRadius="18"
-               BackgroundColor="White"
-               HasShadow="True">
+               BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
+               BorderColor="{AppThemeBinding Light=#E5E7EB, Dark=#334155}"
+               HasShadow="False">
 
-            <VerticalStackLayout Spacing="6">
+            <VerticalStackLayout Spacing="8">
                 <Label x:Name="DestinationLabel"
                        Text="Destination"
                        FontSize="18"
-                       FontAttributes="Bold" />
+                       FontAttributes="Bold"
+                       TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
 
                 <Label x:Name="DistanceLabel"
                        Text="Distance: --"
                        FontSize="14"
-                       TextColor="Green" />
+                       TextColor="{AppThemeBinding Light=#16A34A, Dark=#4ADE80}" />
 
                 <Label x:Name="EtaLabel"
                        Text="ETA: --"
                        FontSize="14"
-                       TextColor="Blue" />
+                       TextColor="{AppThemeBinding Light=#2563EB, Dark=#60A5FA}" />
 
                 <Label x:Name="SpeedLabel"
                        Text="Speed: "
                        FontSize="14"
-                       TextColor="Gray" />
+                       TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
 
-                    <Label x:Name="StatusLabel"
+                <Label x:Name="StatusLabel"
                        Text="Waiting for location..."
                        FontSize="13"
-                       TextColor="Gray" />
+                       TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
 
                 <Button Text="Cancel Navigation"
-        BackgroundColor="Red"
-        TextColor="White"
-        CornerRadius="12"
-        Clicked="CancelNavigation_Clicked" />
+                        BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
+                        TextColor="{AppThemeBinding Light=#B91C1C, Dark=#FCA5A5}"
+                        BorderColor="{AppThemeBinding Light=#FCA5A5, Dark=#7F1D1D}"
+                        BorderWidth="1"
+                        CornerRadius="12"
+                        HeightRequest="46"
+                        Clicked="CancelNavigation_Clicked" />
             </VerticalStackLayout>
         </Frame>
 
         <Frame x:Name="ArrivedPanel"
                Grid.Row="2"
-               Margin="10,5,10,10"
-               Padding="12"
+               Margin="12,6,12,12"
+               Padding="14"
                CornerRadius="18"
-               BackgroundColor="White"
-               HasShadow="True"
+               BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
+               BorderColor="{AppThemeBinding Light=#E5E7EB, Dark=#334155}"
+               HasShadow="False"
                IsVisible="False">
 
-            <VerticalStackLayout Spacing="10">
+            <VerticalStackLayout Spacing="12">
                 <Label Text="You arrived"
                        FontSize="18"
                        FontAttributes="Bold"
-                       HorizontalOptions="Center" />
+                       HorizontalOptions="Center"
+                       TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
 
                 <Button Text="Back to Dashboard"
-                        Clicked="BackToDashboard_Clicked" />
+                        Clicked="BackToDashboard_Clicked"
+                        BackgroundColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                        TextColor="{AppThemeBinding Light=White, Dark=#111827}"
+                        CornerRadius="12"
+                        HeightRequest="46" />
             </VerticalStackLayout>
         </Frame>
     </Grid>

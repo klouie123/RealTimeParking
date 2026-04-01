@@ -1,11 +1,16 @@
+using RealTimeParkingApp.Services;
+
 namespace RealTimeParkingApp.Views;
 
 public partial class ProfilePage : ContentPage
 {
-	public ProfilePage()
+    private bool _themeLoaded;
+
+    public ProfilePage()
 	{
 		InitializeComponent();
-	}
+        LoadThemeSelection();
+    }
 
     protected override void OnAppearing()
     {
@@ -14,6 +19,35 @@ public partial class ProfilePage : ContentPage
         UsernameValueLabel.Text = Preferences.Get("username", "User");
         EmailValueLabel.Text = Preferences.Get("email", "No email");
         RoleValueLabel.Text = Preferences.Get("user_role", "User");
+    }
+
+    private void LoadThemeSelection()
+    {
+        var savedTheme = ThemeService.GetSavedTheme();
+
+        ThemePicker.SelectedIndex = savedTheme switch
+        {
+            "Light" => 1,
+            "Dark" => 2,
+            _ => 0
+        };
+
+        _themeLoaded = true;
+    }
+
+    private void ThemePicker_SelectedIndexChanged(object sender, EventArgs e)
+    {
+        if (!_themeLoaded || ThemePicker.SelectedIndex < 0)
+            return;
+
+        var selectedTheme = ThemePicker.SelectedIndex switch
+        {
+            1 => "Light",
+            2 => "Dark",
+            _ => "System"
+        };
+
+        ThemeService.ApplyTheme(selectedTheme);
     }
 
     private async void LogoutButton_Clicked(object sender, EventArgs e)

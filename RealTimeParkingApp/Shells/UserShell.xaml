@@ -1,22 +1,30 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-       xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
        x:Class="RealTimeParkingApp.Shells.UserShell"
        xmlns:views="clr-namespace:RealTimeParkingApp.Views"
-       Title="RealTimeParkingApp">
+       Title="RealTimeParkingApp"
+       Shell.BackgroundColor="{AppThemeBinding Light=White, Dark=#0F172A}"
+       Shell.ForegroundColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+       Shell.TitleColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+       Shell.DisabledColor="{AppThemeBinding Light=#9CA3AF, Dark=#64748B}"
+       Shell.UnselectedColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}"
+       Shell.TabBarBackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
+       Shell.TabBarForegroundColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+       Shell.TabBarUnselectedColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}"
+       Shell.TabBarTitleColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+       Shell.TabBarDisabledColor="{AppThemeBinding Light=#9CA3AF, Dark=#64748B}"
+       Shell.NavBarHasShadow="False">
 
     <TabBar>
-        <ShellContent
-            Title="Home"
-            Icon="ic_fluent_home_24_filled.png"
-            Route="UserDashboardPage"
-            ContentTemplate="{DataTemplate views:UserDashboardPage}" />
+        <ShellContent Title="Home"
+                      Icon="ic_fluent_home_24_filled.png"
+                      Route="UserDashboardPage"
+                      ContentTemplate="{DataTemplate views:UserDashboardPage}" />
 
-        <ShellContent
-            Title="Profile"
-            Icon="ic_fluent_Person_24_filled.png"
-            Route="ProfilePage"
-            ContentTemplate="{DataTemplate views:ProfilePage}" />
+        <ShellContent Title="Profile"
+                      Icon="ic_fluent_person_24_filled.png"
+                      Route="ProfilePage"
+                      ContentTemplate="{DataTemplate views:ProfilePage}" />
     </TabBar>
 </Shell>

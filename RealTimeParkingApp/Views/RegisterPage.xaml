@@ -2,18 +2,79 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="RealTimeParkingApp.Views.RegisterPage"
-             Title="RegisterPage">
+             Title="Register"
+             BackgroundColor="{AppThemeBinding Light=#F8F9FB, Dark=#0F172A}">
 
-    <StackLayout Padding="20" Spacing="15" VerticalOptions="Center">
-        <Label Text="Create a New Account" FontSize="24" HorizontalOptions="Center" />
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="18">
 
-        <Entry x:Name="UsernameEntry" Placeholder="Username" />
-        <Entry x:Name="FirstNameEntry" Placeholder="First Name" />
-        <Entry x:Name="MiddleNameEntry" Placeholder="Middle Name (Optional)" />
-        <Entry x:Name="LastNameEntry" Placeholder="Last Name" />
-        <Entry x:Name="EmailEntry" Placeholder="Email" Keyboard="Email" />
-        <Entry x:Name="PasswordEntry" Placeholder="Password" IsPassword="True" />
+            <VerticalStackLayout Spacing="4">
+                <Label Text="Create Account"
+                       FontSize="26"
+                       FontAttributes="Bold"
+                       TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                       HorizontalOptions="Center" />
 
-        <Button Text="Register" Clicked="RegisterButton_Clicked" />
-    </StackLayout>
+                <Label Text="Fill in your details to continue"
+                       FontSize="13"
+                       TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}"
+                       HorizontalOptions="Center" />
+            </VerticalStackLayout>
+
+            <Frame CornerRadius="16"
+                   Padding="18"
+                   HasShadow="False"
+                   BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
+                   BorderColor="{AppThemeBinding Light=#E5E7EB, Dark=#334155}">
+
+                <VerticalStackLayout Spacing="14">
+
+                    <Entry x:Name="UsernameEntry"
+                           Placeholder="Username"
+                           BackgroundColor="{AppThemeBinding Light=#F9FAFB, Dark=#111827}"
+                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                           PlaceholderColor="{AppThemeBinding Light=#9CA3AF, Dark=#94A3B8}" />
+
+                    <Entry x:Name="FirstNameEntry"
+                           Placeholder="First Name"
+                           BackgroundColor="{AppThemeBinding Light=#F9FAFB, Dark=#111827}"
+                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                           PlaceholderColor="{AppThemeBinding Light=#9CA3AF, Dark=#94A3B8}" />
+
+                    <Entry x:Name="MiddleNameEntry"
+                           Placeholder="Middle Name (Optional)"
+                           BackgroundColor="{AppThemeBinding Light=#F9FAFB, Dark=#111827}"
+                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                           PlaceholderColor="{AppThemeBinding Light=#9CA3AF, Dark=#94A3B8}" />
+
+                    <Entry x:Name="LastNameEntry"
+                           Placeholder="Last Name"
+                           BackgroundColor="{AppThemeBinding Light=#F9FAFB, Dark=#111827}"
+                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                           PlaceholderColor="{AppThemeBinding Light=#9CA3AF, Dark=#94A3B8}" />
+
+                    <Entry x:Name="EmailEntry"
+                           Placeholder="Email"
+                           Keyboard="Email"
+                           BackgroundColor="{AppThemeBinding Light=#F9FAFB, Dark=#111827}"
+                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                           PlaceholderColor="{AppThemeBinding Light=#9CA3AF, Dark=#94A3B8}" />
+
+                    <Entry x:Name="PasswordEntry"
+                           Placeholder="Password"
+                           IsPassword="True"
+                           BackgroundColor="{AppThemeBinding Light=#F9FAFB, Dark=#111827}"
+                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                           PlaceholderColor="{AppThemeBinding Light=#9CA3AF, Dark=#94A3B8}" />
+
+                    <Button Text="Register"
+                            Clicked="RegisterButton_Clicked"
+                            BackgroundColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                            TextColor="{AppThemeBinding Light=White, Dark=#111827}"
+                            CornerRadius="12"
+                            HeightRequest="48" />
+                </VerticalStackLayout>
+            </Frame>
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>
