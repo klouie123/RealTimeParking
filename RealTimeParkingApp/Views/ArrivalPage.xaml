@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="RealTimeParkingApp.Views.ArrivalPage"
+             Title="Arrival"
+             BackgroundColor="{AppThemeBinding Light=#F8F9FB, Dark=#0F172A}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="16">
+
+            <Label Text="Arrival Confirmation"
+                   FontSize="26"
+                   FontAttributes="Bold"
+                   TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+
+            <Frame CornerRadius="16"
+                   Padding="16"
+                   HasShadow="False"
+                   BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
+                   BorderColor="{AppThemeBinding Light=#E5E7EB, Dark=#334155}">
+                <VerticalStackLayout Spacing="8">
+                    <Label x:Name="LocationLabel"
+                           Text="Location"
+                           FontAttributes="Bold"
+                           FontSize="18"
+                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+
+                    <Label x:Name="SlotLabel"
+                           Text="Slot"
+                           FontSize="14"
+                           TextColor="{AppThemeBinding Light=#6B7280, Dark=#CBD5E1}" />
+
+                    <Label x:Name="StatusLabel"
+                           Text="Status"
+                           FontSize="14"
+                           TextColor="{AppThemeBinding Light=#6B7280, Dark=#CBD5E1}" />
+
+                    <Label x:Name="PaymentStatusLabel"
+                           Text="Payment"
+                           FontSize="14"
+                           TextColor="{AppThemeBinding Light=#6B7280, Dark=#CBD5E1}" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <Button Text="Arrive by Current Location"
+                    Clicked="ArriveByLocation_Clicked"
+                    BackgroundColor="#2563EB"
+                    TextColor="White"
+                    CornerRadius="12"
+                    HeightRequest="48" />
+
+            <Frame CornerRadius="16"
+                   Padding="16"
+                   HasShadow="False"
+                   BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
+                   BorderColor="{AppThemeBinding Light=#E5E7EB, Dark=#334155}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="QR Code Check-In"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+
+                    <Entry x:Name="QrCodeEntry"
+                           Placeholder="Enter or paste QR code value"
+                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                           PlaceholderColor="{AppThemeBinding Light=#9CA3AF, Dark=#64748B}" />
+
+                    <Button Text="Confirm QR Arrival"
+                            Clicked="ArriveByQr_Clicked"
+                            BackgroundColor="#059669"
+                            TextColor="White"
+                            CornerRadius="12"
+                            HeightRequest="48" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <Frame CornerRadius="16"
+                   Padding="16"
+                   HasShadow="False"
+                   BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
+                   BorderColor="{AppThemeBinding Light=#E5E7EB, Dark=#334155}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Simulated Payment"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+
+                    <Entry x:Name="AmountEntry"
+                           Placeholder="Amount"
+                           Keyboard="Numeric"
+                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+
+                    <Entry x:Name="ReferenceEntry"
+                           Placeholder="Reference Number"
+                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+
+                    <Button Text="Pay Now (Simulated)"
+                            Clicked="SimulatedPayment_Clicked"
+                            BackgroundColor="#D97706"
+                            TextColor="White"
+                            CornerRadius="12"
+                            HeightRequest="48" />
+                </VerticalStackLayout>
+            </Frame>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

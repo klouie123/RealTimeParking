@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="RealTimeParkingApp.Views.SettingsPage"
+             Title="Settings"
+             BackgroundColor="{AppThemeBinding Light=#F8F9FB, Dark=#0F172A}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="20">
+
+            <VerticalStackLayout Spacing="4">
+                <Label Text="Settings"
+                       FontSize="26"
+                       FontAttributes="Bold"
+                       TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+
+                <Label Text="Manage your common app settings"
+                       FontSize="13"
+                       TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+            </VerticalStackLayout>
+
+            <Frame CornerRadius="16"
+                   Padding="18"
+                   HasShadow="False"
+                   BorderColor="{AppThemeBinding Light=#E5E7EB, Dark=#334155}"
+                   BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}">
+
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Appearance"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+
+                    <Label Text="Choose app theme"
+                           FontSize="13"
+                           TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+
+                    <Picker x:Name="ThemePicker"
+                            Title="Select Theme"
+                            SelectedIndexChanged="ThemePicker_SelectedIndexChanged"
+                            TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                            BackgroundColor="{AppThemeBinding Light=#F9FAFB, Dark=#0F172A}">
+                        <Picker.Items>
+                            <x:String>System</x:String>
+                            <x:String>Light</x:String>
+                            <x:String>Dark</x:String>
+                        </Picker.Items>
+                    </Picker>
+                </VerticalStackLayout>
+            </Frame>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

@@ -1,4 +1,4 @@
-﻿namespace RealTimeParkingAPI.DTO
+﻿namespace RealTimeParkingAPI.DTOs
 {
     public class ReserveSlotRequest
     {

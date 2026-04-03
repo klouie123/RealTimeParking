@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="RealTimeParkingApp.Views.LocationAdminSlotsPage"
+             Title="My Parking Slots"
+             BackgroundColor="{AppThemeBinding Light=#F8F9FB, Dark=#0F172A}">
+
+    <Grid RowDefinitions="Auto,*" Padding="20">
+
+        <VerticalStackLayout Grid.Row="0" Spacing="4" Margin="0,0,0,18">
+            <Label x:Name="LocationNameLabel"
+                   Text="My Parking Slots"
+                   FontSize="24"
+                   FontAttributes="Bold"
+                   TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+
+            <Label Text="These are the slots assigned to your parking location."
+                   FontSize="13"
+                   TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+        </VerticalStackLayout>
+
+        <CollectionView x:Name="SlotsCollectionView"
+                        Grid.Row="1"
+                        SelectionMode="None">
+            <CollectionView.ItemsLayout>
+                <GridItemsLayout Orientation="Vertical"
+                                 Span="2"
+                                 VerticalItemSpacing="12"
+                                 HorizontalItemSpacing="12" />
+            </CollectionView.ItemsLayout>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Frame Padding="14"
+                           CornerRadius="16"
+                           HasShadow="False"
+                           BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
+                           BorderColor="{AppThemeBinding Light=#E5E7EB, Dark=#334155}">
+
+                        <Frame.GestureRecognizers>
+                            <TapGestureRecognizer
+                                Tapped="SlotCard_Tapped"
+                                CommandParameter="{Binding .}" />
+                        </Frame.GestureRecognizers>
+
+                        <VerticalStackLayout Spacing="10">
+
+                            <Grid ColumnDefinitions="*,Auto">
+                                <Label Text="{Binding SlotCode}"
+                                       FontSize="18"
+                                       FontAttributes="Bold"
+                                       TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+
+                                <Frame Grid.Column="1"
+                                       Padding="8,4"
+                                       CornerRadius="10"
+                                       HasShadow="False"
+                                       BackgroundColor="{Binding StatusBadgeColor}">
+                                    <Label Text="{Binding Status}"
+                                           FontSize="11"
+                                           FontAttributes="Bold"
+                                           TextColor="White" />
+                                </Frame>
+                            </Grid>
+
+                            <Label Text="{Binding SlotMessage}"
+                                   FontSize="12"
+                                   LineBreakMode="WordWrap"
+                                   TextColor="{AppThemeBinding Light=#6B7280, Dark=#CBD5E1}" />
+                        </VerticalStackLayout>
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+    </Grid>
+</ContentPage>

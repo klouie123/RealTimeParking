@@ -11,5 +11,9 @@
         public string PasswordHash { get; set; } = "";
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public string Role { get; set; } = "User";
+
+        // NULL for SuperAdmin or normal User
+        public int? ParkingLocationId { get; set; }
+        public ParkingLocation? ParkingLocation { get; set; }
     }
 }

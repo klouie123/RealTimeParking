@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="RealTimeParkingApp.Views.LocationAdminSlotDetailsPage"
+             Title="Slot Details"
+             BackgroundColor="{AppThemeBinding Light=#F8F9FB, Dark=#0F172A}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="16">
+
+            <Label x:Name="SlotCodeLabel" FontSize="24" FontAttributes="Bold" />
+            <Label x:Name="SlotStatusLabel" FontSize="14" />
+            <Label x:Name="ReservedUserLabel" FontSize="14" />
+            <Label x:Name="ReservedAtLabel" FontSize="14" />
+            <Label x:Name="CheckInAtLabel" FontSize="14" />
+            <Label x:Name="ReservationReferenceLabel" FontSize="14" />
+            <Label x:Name="PaymentReferenceLabel" FontSize="14" />
+
+            <Button Text="Confirm Arrival"
+                    Clicked="ManualArrive_Clicked"
+                    BackgroundColor="#2563EB"
+                    TextColor="White" />
+
+            <Button Text="Done / Check Out"
+                    Clicked="ManualCheckout_Clicked"
+                    BackgroundColor="#DC2626"
+                    TextColor="White" />
+
+            <Button Text="Scan Arrival QR"
+                    Clicked="ScanArrivalQr_Clicked"
+                    BackgroundColor="#059669"
+                    TextColor="White" />
+
+            <Button Text="Scan Payment QR"
+                    Clicked="ScanPaymentQr_Clicked"
+                    BackgroundColor="#D97706"
+                    TextColor="White" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

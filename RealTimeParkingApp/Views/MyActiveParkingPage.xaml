@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:zxing="clr-namespace:ZXing.Net.Maui.Controls;assembly=ZXing.Net.Maui.Controls"
+             x:Class="RealTimeParkingApp.Views.MyActiveParkingPage"
+             Title="My Active Parking"
+             BackgroundColor="{AppThemeBinding Light=#F8F9FB, Dark=#0F172A}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="16">
+
+            <Label Text="My Active Parking"
+                   FontSize="26"
+                   FontAttributes="Bold"
+                   TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+
+            <Frame CornerRadius="16"
+                   Padding="16"
+                   HasShadow="False"
+                   BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
+                   BorderColor="{AppThemeBinding Light=#E5E7EB, Dark=#334155}">
+                <VerticalStackLayout Spacing="8">
+                    <Label x:Name="LocationLabel" FontSize="18" FontAttributes="Bold" />
+                    <Label x:Name="SlotLabel" FontSize="14" />
+                    <Label x:Name="StatusLabel" FontSize="14" />
+                    <Label x:Name="ReferenceLabel" FontSize="14" />
+                    <Label x:Name="PaymentLabel" FontSize="14" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <Frame CornerRadius="16"
+                   Padding="16"
+                   BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
+                   BorderColor="{AppThemeBinding Light=#E5E7EB, Dark=#334155}"
+                   HasShadow="False">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="QR Code / Reference"
+                           FontSize="18"
+                           FontAttributes="Bold" />
+                    <Label x:Name="QrTextLabel"
+                           FontSize="16"
+                           HorizontalOptions="Center" />
+                    <Image x:Name="QrImage"
+                           HeightRequest="200"
+                           WidthRequest="200"
+                           HorizontalOptions="Center" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <Button x:Name="NavigateButton"
+                    Text="Navigate"
+                    Clicked="Navigate_Clicked"
+                    BackgroundColor="#2563EB"
+                    TextColor="White"
+                    CornerRadius="12"
+                    HeightRequest="48" />
+
+            <Button x:Name="DoneParkingButton"
+                    Text="Done Parking"
+                    Clicked="DoneParking_Clicked"
+                    BackgroundColor="#D97706"
+                    TextColor="White"
+                    CornerRadius="12"
+                    HeightRequest="48" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

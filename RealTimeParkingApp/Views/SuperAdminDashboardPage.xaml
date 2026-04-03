@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="RealTimeParkingApp.Views.SuperAdminDashboardPage"
+             Title="Super Admin Dashboard"
+             BackgroundColor="{AppThemeBinding Light=#F8F9FB, Dark=#0F172A}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="16">
+
+            <Label Text="Welcome, Super Admin!"
+                   FontSize="26"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+
+            <Label x:Name="UsernameLabel"
+                   FontSize="16"
+                   HorizontalOptions="Center"
+                   TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+
+            <!-- CREATE LOCATION ADMIN -->
+            <Button Text="Create Location Admin"
+                    Clicked="CreateLocationAdmin_Clicked"
+                    BackgroundColor="#2563EB"
+                    TextColor="White"
+                    CornerRadius="12"
+                    HeightRequest="48"/>
+
+            <!-- MANAGE USERS -->
+            <Button Text="Manage Users"
+                    Clicked="ManageUsers_Clicked"
+                    BackgroundColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                    TextColor="{AppThemeBinding Light=White, Dark=#111827}"
+                    CornerRadius="12"
+                    HeightRequest="48"/>
+
+            <!-- MANAGE LOCATIONS -->
+            <Button Text="Manage Parking Locations"
+                    Clicked="ManageLocations_Clicked"
+                    BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
+                    TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                    BorderColor="{AppThemeBinding Light=#D1D5DB, Dark=#334155}"
+                    BorderWidth="1"
+                    CornerRadius="12"
+                    HeightRequest="48"/>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

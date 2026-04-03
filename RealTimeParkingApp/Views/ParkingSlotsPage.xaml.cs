@@ -11,6 +11,7 @@ namespace RealTimeParkingApp.Views;
 public partial class ParkingSlotsPage : ContentPage
 {
     private readonly ParkingService _parkingService;
+    private readonly ApiService _apiService;
     private readonly NavigationStateService _navigationState;
 
     private int _parkingLocationId;
@@ -18,17 +19,21 @@ public partial class ParkingSlotsPage : ContentPage
     private double _destinationLng;
 
     private ParkingSlotUiModel? _selectedSlotForReserve;
+    private bool _isReserving;
 
-    public string DestinationLatText { get; set; }
-    public string DestinationLngText { get; set; }
+    public string DestinationLatText { get; set; } = string.Empty;
+    public string DestinationLngText { get; set; } = string.Empty;
+    public string ParkingLocationIdText { get; set; } = string.Empty;
+    public string ParkingLocationName { get; set; } = string.Empty;
 
-    public string ParkingLocationIdText { get; set; }
-    public string ParkingLocationName { get; set; }
-
-    public ParkingSlotsPage(ParkingService parkingService, NavigationStateService navigationState)
+    public ParkingSlotsPage(
+        ParkingService parkingService,
+        ApiService apiService,
+        NavigationStateService navigationState)
     {
         InitializeComponent();
         _parkingService = parkingService;
+        _apiService = apiService;
         _navigationState = navigationState;
     }
 
@@ -37,12 +42,18 @@ public partial class ParkingSlotsPage : ContentPage
         base.OnAppearing();
 
         if (!int.TryParse(ParkingLocationIdText, out _parkingLocationId))
+        {
+            await DisplayAlert("Error", "Invalid parking location.", "OK");
             return;
+        }
 
-        LocationNameLabel.Text = Uri.UnescapeDataString(ParkingLocationName ?? "Parking Slots");
+        LocationNameLabel.Text = Uri.UnescapeDataString(
+            string.IsNullOrWhiteSpace(ParkingLocationName)
+                ? "Parking Slots"
+                : ParkingLocationName);
 
-        double.TryParse(DestinationLatText, CultureInfo.InvariantCulture, out _destinationLat);
-        double.TryParse(DestinationLngText, CultureInfo.InvariantCulture, out _destinationLng);
+        double.TryParse(DestinationLatText, NumberStyles.Any, CultureInfo.InvariantCulture, out _destinationLat);
+        double.TryParse(DestinationLngText, NumberStyles.Any, CultureInfo.InvariantCulture, out _destinationLng);
 
         await LoadSlotsAsync();
     }
@@ -53,55 +64,75 @@ public partial class ParkingSlotsPage : ContentPage
         {
             var slots = await _parkingService.GetSlotsByLocationAsync(_parkingLocationId);
 
-            if (slots == null)
+            if (slots == null || slots.Count == 0)
             {
-                SlotsCollectionView.ItemsSource = null;
+                SlotsCollectionView.ItemsSource = new List<ParkingSlotUiModel>();
                 return;
             }
 
-            var uiSlots = slots.Select(slot =>
-            {
-                bool isAvailable = string.Equals(slot.Status, "Available", StringComparison.OrdinalIgnoreCase);
-
-                return new ParkingSlotUiModel
-                {
-                    Id = slot.Id,
-                    SlotCode = slot.SlotCode,
-                    Status = slot.Status,
-                    IsAvailable = isAvailable,
-
-                    SlotBackgroundColor = isAvailable ? "#FFFFFF" : "#FEE2E2",
-                    SlotBorderColor = isAvailable ? "#E5E7EB" : "#FCA5A5",
-                    SlotTextColor = isAvailable ? "#111827" : "#991B1B",
-                    SlotSubTextColor = isAvailable ? "#6B7280" : "#B91C1C",
-                    StatusBadgeColor = isAvailable ? "#16A34A" : "#DC2626",
-                    SlotOpacity = isAvailable ? 1.0 : 0.85,
-                    SlotMessage = isAvailable
-                        ? "Tap to reserve this slot."
-                        : "This slot is already reserved."
-                };
-            }).ToList();
-
+            var uiSlots = slots.Select(MapToUiModel).ToList();
             SlotsCollectionView.ItemsSource = uiSlots;
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Error", ex.Message, "OK");
+            await DisplayAlert("Error", $"Failed to load slots: {ex.Message}", "OK");
         }
+    }
+
+    private static ParkingSlotUiModel MapToUiModel(ParkingSlot slot)
+    {
+        var status = slot.Status?.Trim() ?? "Unknown";
+
+        var isAvailable = status.Equals("Available", StringComparison.OrdinalIgnoreCase);
+        var isReserved = status.Equals("Reserved", StringComparison.OrdinalIgnoreCase);
+        var isOccupied = status.Equals("Occupied", StringComparison.OrdinalIgnoreCase);
+
+        return new ParkingSlotUiModel
+        {
+            Id = slot.Id,
+            SlotCode = slot.SlotCode,
+            Status = status,
+            IsAvailable = isAvailable,
+
+            SlotBackgroundColor = isAvailable ? "#FFFFFF" : "#F8FAFC",
+            SlotBorderColor = isAvailable ? "#E5E7EB" : "#CBD5E1",
+            SlotTextColor = isAvailable ? "#111827" : "#334155",
+            SlotSubTextColor = isAvailable ? "#6B7280" : "#64748B",
+            StatusBadgeColor = isAvailable
+                ? "#16A34A"
+                : isReserved
+                    ? "#D97706"
+                    : isOccupied
+                        ? "#DC2626"
+                        : "#64748B",
+            SlotOpacity = 1.0,
+            SlotMessage = isAvailable
+                ? "Tap to reserve this slot."
+                : isReserved
+                    ? "This slot is currently reserved."
+                    : isOccupied
+                        ? "This slot is currently occupied."
+                        : "Slot status is unavailable."
+        };
     }
 
     private async void SlotCard_Tapped(object sender, TappedEventArgs e)
     {
         try
         {
+            if (_isReserving)
+                return;
+
             if (e.Parameter is not ParkingSlotUiModel slot)
                 return;
 
             if (!slot.IsAvailable)
+            {
+                await DisplayAlert("Info", $"{slot.SlotCode} is not available.", "OK");
                 return;
+            }
 
             _selectedSlotForReserve = slot;
-
             PopupSlotCodeLabel.Text = slot.SlotCode;
             PopupSlotMessageLabel.Text = $"Do you want to reserve {slot.SlotCode}?";
 
@@ -138,21 +169,19 @@ public partial class ParkingSlotsPage : ContentPage
 
     private async void ConfirmReserveButton_Clicked(object sender, EventArgs e)
     {
+        if (_isReserving)
+            return;
+
         try
         {
             if (_selectedSlotForReserve == null)
                 return;
 
-            var userId = Preferences.Get("user_id", 0);
+            _isReserving = true;
+            ConfirmReserveButton.IsEnabled = false;
 
-            if (userId == 0)
-            {
-                await HideReservePopupAsync();
-                await DisplayAlert("Error", "User not found.", "OK");
-                return;
-            }
-
-            var success = await _parkingService.ReserveSlotAsync(userId, _selectedSlotForReserve.Id);
+            var reservedSlotCode = _selectedSlotForReserve.SlotCode;
+            var success = await _apiService.ReserveSlotAsync(_selectedSlotForReserve.Id);
 
             await HideReservePopupAsync();
 
@@ -163,19 +192,29 @@ public partial class ParkingSlotsPage : ContentPage
                 return;
             }
 
-            string destinationName = Uri.UnescapeDataString(ParkingLocationName ?? "Reserved Parking");
+            var destinationName = Uri.UnescapeDataString(
+                string.IsNullOrWhiteSpace(ParkingLocationName)
+                    ? "Reserved Parking"
+                    : ParkingLocationName);
+
             _navigationState.StartNavigation(destinationName, _destinationLat, _destinationLng);
 
-            await DisplayAlert("Success", $"Slot {_selectedSlotForReserve.SlotCode} reserved successfully.", "OK");
+            await DisplayAlert("Success", $"Slot {reservedSlotCode} reserved successfully.", "OK");
 
             _selectedSlotForReserve = null;
             await LoadSlotsAsync();
+
+            await Shell.Current.GoToAsync(nameof(MyActiveParkingPage));
         }
         catch (Exception ex)
         {
             await HideReservePopupAsync();
             await DisplayAlert("Error", ex.Message, "OK");
         }
+        finally
+        {
+            _isReserving = false;
+            ConfirmReserveButton.IsEnabled = true;
+        }
     }
 }
-

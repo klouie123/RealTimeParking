@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="RealTimeParkingApp.Views.LocationAdminManualArrivalPage"
+             Title="Manual Arrival Check"
+             BackgroundColor="{AppThemeBinding Light=#F8F9FB, Dark=#0F172A}">
+
+    <Grid Padding="20">
+        <CollectionView x:Name="ReservationsCollectionView"
+                        SelectionMode="None">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Frame Margin="0,0,0,12"
+                           Padding="14"
+                           CornerRadius="16"
+                           HasShadow="False"
+                           BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
+                           BorderColor="{AppThemeBinding Light=#E5E7EB, Dark=#334155}">
+
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="{Binding FullName}"
+                                   FontSize="18"
+                                   FontAttributes="Bold"
+                                   TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+
+                            <Label Text="{Binding Username, StringFormat='Username: {0}'}"
+                                   FontSize="13"
+                                   TextColor="{AppThemeBinding Light=#6B7280, Dark=#CBD5E1}" />
+
+                            <Label Text="{Binding SlotCode, StringFormat='Slot: {0}'}"
+                                   FontSize="13"
+                                   TextColor="{AppThemeBinding Light=#6B7280, Dark=#CBD5E1}" />
+
+                            <Label Text="{Binding Status, StringFormat='Status: {0}'}"
+                                   FontSize="13"
+                                   TextColor="{AppThemeBinding Light=#6B7280, Dark=#CBD5E1}" />
+
+                            <Label Text="{Binding IsPaid, StringFormat='Paid: {0}'}"
+                                   FontSize="13"
+                                   TextColor="{AppThemeBinding Light=#6B7280, Dark=#CBD5E1}" />
+
+                            <Button Text="Confirm Arrival"
+                                    Clicked="ConfirmArrival_Clicked"
+                                    CommandParameter="{Binding .}"
+                                    BackgroundColor="#111827"
+                                    TextColor="White"
+                                    CornerRadius="10"
+                                    HeightRequest="44" />
+                        </VerticalStackLayout>
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>

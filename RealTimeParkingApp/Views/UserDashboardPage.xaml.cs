@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.Maui.Controls.Maps;
 using Microsoft.Maui.Maps;
 using RealTimeParkingApp.Models;
@@ -11,16 +12,17 @@ namespace RealTimeParkingApp.Views;
 public partial class UserDashboardPage : ContentPage
 {
     private readonly NavigationStateService _navigationState;
-    private ActiveReservation? _activeReservation;
     private readonly ParkingService _parkingService;
     private readonly ApiService _apiService;
     private readonly LocationService _locationService;
 
+    private ActiveParkingModel? _activeParking;
     private ParkingLocation? _selectedParkingLocation;
     private Pin? _selectedParkingPin;
     private bool _mapInitialized;
 
-    
+    private CancellationTokenSource? _refreshCts;
+    private bool _isBusy;
 
     public UserDashboardPage()
     {
@@ -40,13 +42,73 @@ public partial class UserDashboardPage : ContentPage
 
         try
         {
-            await LoadParkingLocationsAsync();
-            await InitializeMapToUserLocationAsync();
-            UpdateNavigationBanner();
+            await RefreshDashboardAsync();
+            StartAutoRefresh();
         }
         catch (Exception ex)
         {
             await DisplayAlert("Crash", ex.ToString(), "OK");
+        }
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        StopAutoRefresh();
+    }
+
+    private void StartAutoRefresh()
+    {
+        StopAutoRefresh();
+        _refreshCts = new CancellationTokenSource();
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                while (!_refreshCts.Token.IsCancellationRequested)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(3), _refreshCts.Token);
+
+                    if (_refreshCts.Token.IsCancellationRequested || _isBusy)
+                        continue;
+
+                    MainThread.BeginInvokeOnMainThread(async () =>
+                    {
+                        if (!_isBusy)
+                            await RefreshDashboardAsync(false);
+                    });
+                }
+            }
+            catch (TaskCanceledException)
+            {
+            }
+        });
+    }
+
+    private void StopAutoRefresh()
+    {
+        if (_refreshCts != null)
+        {
+            _refreshCts.Cancel();
+            _refreshCts.Dispose();
+            _refreshCts = null;
+        }
+    }
+
+    private async Task RefreshDashboardAsync(bool showError = true)
+    {
+        try
+        {
+            await LoadParkingLocationsAsync(showError);
+            await InitializeMapToUserLocationAsync();
+            await RefreshActiveParkingStateAsync(showError);
+            UpdateNavigationBanner();
+        }
+        catch (Exception ex)
+        {
+            if (showError)
+                await DisplayAlert("Error", ex.Message, "OK");
         }
     }
 
@@ -71,27 +133,54 @@ public partial class UserDashboardPage : ContentPage
         }
         catch
         {
-            // safe fallback lang, no alert
         }
     }
 
-    private async Task LoadParkingLocationsAsync()
+    private async Task LoadParkingLocationsAsync(bool showError = true)
     {
         try
         {
             var locations = await _parkingService.GetParkingLocationsAsync();
-
-            if (locations == null)
-            {
-                ParkingLocationsCollectionView.ItemsSource = null;
-                return;
-            }
-
-            ParkingLocationsCollectionView.ItemsSource = locations;
+            ParkingLocationsCollectionView.ItemsSource = locations ?? new List<ParkingLocation>();
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Error", ex.ToString(), "OK");
+            if (showError)
+                await DisplayAlert("Error", ex.Message, "OK");
+        }
+    }
+
+    private async Task RefreshActiveParkingStateAsync(bool showError = true)
+    {
+        try
+        {
+            _activeParking = await _apiService.GetMyActiveParkingAsync();
+
+            if (_activeParking == null)
+            {
+                _navigationState.ClearAll();
+
+                ReservedFloatingButton.IsVisible = false;
+                ReservedOverlay.IsVisible = false;
+
+                return;
+            }
+
+            ReservedFloatingButton.IsVisible = true;
+
+            if (_activeParking.Status == "Occupied")
+            {
+                _navigationState.ClearAll();
+            }
+            else if (_activeParking.Status != "Reserved")
+            {
+                _navigationState.ClearAll();
+            }
+        }
+        catch (Exception ex)
+        {
+            if (showError)
+                await DisplayAlert("Error", ex.Message, "OK");
         }
     }
 
@@ -166,27 +255,31 @@ public partial class UserDashboardPage : ContentPage
 
     private async Task OpenParkingSlots(ParkingLocation location)
     {
+        StopAutoRefresh();
+
         await Shell.Current.GoToAsync(
             $"{nameof(ParkingSlotsPage)}" +
             $"?parkingLocationId={location.Id}" +
             $"&parkingLocationName={Uri.EscapeDataString(location.Name ?? "Parking")}" +
-            $"&lat={location.Latitude.ToString(System.Globalization.CultureInfo.InvariantCulture)}" +
-            $"&lng={location.Longitude.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
+            $"&lat={location.Latitude.ToString(CultureInfo.InvariantCulture)}" +
+            $"&lng={location.Longitude.ToString(CultureInfo.InvariantCulture)}");
     }
 
     private async void OpenNavigationBanner_Clicked(object sender, EventArgs e)
     {
         try
         {
-            if (!_navigationState.IsNavigating)
+            if (!_navigationState.IsNavigating || !_navigationState.HasDestination)
                 return;
 
             string name = Uri.EscapeDataString(_navigationState.DestinationName ?? "Destination");
 
+            StopAutoRefresh();
+
             await Shell.Current.GoToAsync(
                 $"{nameof(NavigationMapPage)}" +
-                $"?destLat={_navigationState.DestinationLat.ToString(System.Globalization.CultureInfo.InvariantCulture)}" +
-                $"&destLng={_navigationState.DestinationLng.ToString(System.Globalization.CultureInfo.InvariantCulture)}" +
+                $"?destLat={_navigationState.DestinationLat.ToString(CultureInfo.InvariantCulture)}" +
+                $"&destLng={_navigationState.DestinationLng.ToString(CultureInfo.InvariantCulture)}" +
                 $"&destName={name}");
         }
         catch (Exception ex)
@@ -199,41 +292,27 @@ public partial class UserDashboardPage : ContentPage
     {
         try
         {
-            var userId = Preferences.Get("user_id", 0);
-
-            if (userId == 0)
+            if (_activeParking == null)
             {
-                await DisplayAlert("Error", "User not found.", "OK");
+                ReservedFloatingButton.IsVisible = false;
+                await DisplayAlert("Info", "No active reservation found.", "OK");
                 return;
             }
 
-            var reservation = await _parkingService.GetActiveReservationAsync(userId);
-
-            if (reservation == null)
-            {
-                await DisplayAlert("Info", "You have no active reservation.", "OK");
-                return;
-            }
-
-            _activeReservation = reservation;
-
-            ReservedLocationLabel.Text = $"Location: {reservation.ParkingLocationName}";
-            ReservedSlotLabel.Text = $"Slot: {reservation.SlotCode}";
-            ReservedStatusLabel.Text = $"Status: {reservation.Status}";
-            ReservedExpiryLabel.Text = reservation.ExpiresAt.HasValue
-                ? $"Expires At: {DateTime.SpecifyKind(reservation.ExpiresAt.Value, DateTimeKind.Utc).ToLocalTime():MMM dd, yyyy hh:mm tt}"
-                : "Expires At: Not set";
-
-            await ShowReservedPanelAsync();
+            StopAutoRefresh();
+            await Shell.Current.GoToAsync(nameof(MyActiveParkingPage));
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Error", ex.ToString(), "OK");
+            await DisplayAlert("Error", ex.Message, "OK");
         }
     }
 
     private async Task ShowReservedPanelAsync()
     {
+        if (_activeParking == null)
+            return;
+
         ReservedOverlay.IsVisible = true;
         ReservedPanel.TranslationY = 320;
         await ReservedPanel.TranslateTo(0, 0, 220, Easing.CubicOut);
@@ -254,25 +333,39 @@ public partial class UserDashboardPage : ContentPage
     {
         try
         {
-            if (_activeReservation == null)
+            if (_activeParking == null)
             {
                 await DisplayAlert("Info", "No active reservation found.", "OK");
                 return;
             }
 
+            if (_activeParking.Status != "Reserved")
+            {
+                await DisplayAlert("Info", "Navigation is only available before arrival.", "OK");
+                return;
+            }
+
+            if (_activeParking.Latitude == 0 || _activeParking.Longitude == 0)
+            {
+                await DisplayAlert("Info", "Location coordinates are not available.", "OK");
+                return;
+            }
+
             _navigationState.StartNavigation(
-                _activeReservation.ParkingLocationName,
-                _activeReservation.Latitude,
-                _activeReservation.Longitude);
+                _activeParking.ParkingLocationName,
+                _activeParking.Latitude,
+                _activeParking.Longitude);
 
             UpdateNavigationBanner();
 
-            string name = Uri.EscapeDataString(_activeReservation.ParkingLocationName);
+            string name = Uri.EscapeDataString(_activeParking.ParkingLocationName);
+
+            StopAutoRefresh();
 
             await Shell.Current.GoToAsync(
                 $"{nameof(NavigationMapPage)}" +
-                $"?destLat={_activeReservation.Latitude.ToString(System.Globalization.CultureInfo.InvariantCulture)}" +
-                $"&destLng={_activeReservation.Longitude.ToString(System.Globalization.CultureInfo.InvariantCulture)}" +
+                $"?destLat={_activeParking.Latitude.ToString(CultureInfo.InvariantCulture)}" +
+                $"&destLng={_activeParking.Longitude.ToString(CultureInfo.InvariantCulture)}" +
                 $"&destName={name}");
         }
         catch (Exception ex)
@@ -285,7 +378,7 @@ public partial class UserDashboardPage : ContentPage
     {
         try
         {
-            if (_activeReservation == null)
+            if (_activeParking == null)
             {
                 await DisplayAlert("Info", "No active reservation found.", "OK");
                 return;
@@ -300,7 +393,9 @@ public partial class UserDashboardPage : ContentPage
             if (!confirm)
                 return;
 
-            var success = await _parkingService.CancelReservationAsync(_activeReservation.Id);
+            _isBusy = true;
+
+            var success = await _parkingService.CancelReservationAsync(_activeParking.ReservationId);
 
             if (!success)
             {
@@ -308,35 +403,41 @@ public partial class UserDashboardPage : ContentPage
                 return;
             }
 
-            _navigationState.StopNavigation();
-            _activeReservation = null;
-            await HideReservedPanelAsync();
+            _navigationState.ClearAll();
+            _activeParking = null;
 
-            UpdateNavigationBanner();
+            await HideReservedPanelAsync();
+            await RefreshDashboardAsync(false);
 
             await DisplayAlert("Success", "Reservation cancelled successfully.", "OK");
-            await LoadParkingLocationsAsync();
         }
         catch (Exception ex)
         {
             await DisplayAlert("Error", ex.ToString(), "OK");
         }
+        finally
+        {
+            _isBusy = false;
+        }
     }
 
     private void UpdateNavigationBanner()
     {
-        if (_navigationState.IsNavigating && !_navigationState.HasArrived)
-        {
-            NavigationBanner.IsVisible = true;
-            FloatingNavigationButton.IsVisible = true;
+        bool shouldShow =
+            _navigationState.HasDestination &&
+            _navigationState.IsNavigating &&
+            !_navigationState.HasArrived;
 
+        NavigationBanner.IsVisible = shouldShow;
+        FloatingNavigationButton.IsVisible = shouldShow;
+
+        if (shouldShow)
+        {
             NavigationBannerLabel.Text =
                 $"{_navigationState.DestinationName} • {_navigationState.RemainingDistanceKm:F2} km • ETA {Math.Ceiling(_navigationState.EtaMinutes)} min";
         }
         else
         {
-            NavigationBanner.IsVisible = false;
-            FloatingNavigationButton.IsVisible = false;
             NavigationBannerLabel.Text = "Tap to return to navigation";
         }
     }
@@ -345,18 +446,20 @@ public partial class UserDashboardPage : ContentPage
     {
         try
         {
-            if (!_navigationState.IsNavigating)
+            if (!_navigationState.HasDestination || !_navigationState.IsNavigating)
             {
-                await DisplayAlert("Info", "No active navigation yet.", "OK");
+                await DisplayAlert("Info", "No active destination yet.", "OK");
                 return;
             }
 
             string name = Uri.EscapeDataString(_navigationState.DestinationName ?? "Destination");
 
+            StopAutoRefresh();
+
             await Shell.Current.GoToAsync(
                 $"{nameof(NavigationMapPage)}" +
-                $"?destLat={_navigationState.DestinationLat.ToString(System.Globalization.CultureInfo.InvariantCulture)}" +
-                $"&destLng={_navigationState.DestinationLng.ToString(System.Globalization.CultureInfo.InvariantCulture)}" +
+                $"?destLat={_navigationState.DestinationLat.ToString(CultureInfo.InvariantCulture)}" +
+                $"&destLng={_navigationState.DestinationLng.ToString(CultureInfo.InvariantCulture)}" +
                 $"&destName={name}");
         }
         catch (Exception ex)
@@ -388,4 +491,3 @@ public partial class UserDashboardPage : ContentPage
     }
 #endif
 }
-

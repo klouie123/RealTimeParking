@@ -4,12 +4,9 @@ namespace RealTimeParkingApp.Views;
 
 public partial class ProfilePage : ContentPage
 {
-    private bool _themeLoaded;
-
     public ProfilePage()
     {
         InitializeComponent();
-        LoadThemeSelection();
     }
 
     protected override void OnAppearing()
@@ -21,33 +18,14 @@ public partial class ProfilePage : ContentPage
         RoleValueLabel.Text = Preferences.Get("user_role", "User");
     }
 
-    private void LoadThemeSelection()
+    private async void ParkingHistoryButton_Clicked(object sender, EventArgs e)
     {
-        var savedTheme = ThemeService.GetSavedTheme();
-
-        ThemePicker.SelectedIndex = savedTheme switch
-        {
-            "Light" => 1,
-            "Dark" => 2,
-            _ => 0
-        };
-
-        _themeLoaded = true;
+        await Shell.Current.GoToAsync(nameof(ParkingHistoryPage));
     }
 
-    private void ThemePicker_SelectedIndexChanged(object sender, EventArgs e)
+    private async void SettingsButton_Clicked(object sender, EventArgs e)
     {
-        if (!_themeLoaded || ThemePicker.SelectedIndex < 0)
-            return;
-
-        var selectedTheme = ThemePicker.SelectedIndex switch
-        {
-            1 => "Light",
-            2 => "Dark",
-            _ => "System"
-        };
-
-        ThemeService.ApplyTheme(selectedTheme);
+        await Shell.Current.GoToAsync(nameof(SettingsPage));
     }
 
     private async void LogoutButton_Clicked(object sender, EventArgs e)
@@ -62,9 +40,11 @@ public partial class ProfilePage : ContentPage
 
         Preferences.Remove("jwt_token");
         Preferences.Remove("user_role");
+        Preferences.Remove("user_id");
         Preferences.Remove("username");
         Preferences.Remove("email");
-        Preferences.Remove("user_id");
+        Preferences.Remove("parking_location_id");
+        Preferences.Remove("parking_location_name");
 
         Application.Current!.MainPage =
             new NavigationPage(App.Services.GetRequiredService<LoginPage>());

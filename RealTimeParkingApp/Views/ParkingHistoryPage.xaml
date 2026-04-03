@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="RealTimeParkingApp.Views.ParkingHistoryPage"
+             Title="Parking History"
+             BackgroundColor="{AppThemeBinding Light=#F8F9FB, Dark=#0F172A}">
+
+    <Grid>
+        <CollectionView x:Name="HistoryCollectionView"
+                        Margin="20"
+                        SelectionMode="None">
+            <CollectionView.EmptyView>
+                <VerticalStackLayout Padding="20" Spacing="6">
+                    <Label Text="No parking history found."
+                           FontSize="16"
+                           HorizontalOptions="Center"
+                           TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Frame Margin="0,0,0,12"
+                           Padding="16"
+                           CornerRadius="16"
+                           HasShadow="False"
+                           BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
+                           BorderColor="{AppThemeBinding Light=#E5E7EB, Dark=#334155}">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="{Binding ParkingLocationName}"
+                                   FontSize="18"
+                                   FontAttributes="Bold"
+                                   TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+
+                            <Label Text="{Binding SlotCode, StringFormat='Slot: {0}'}"
+                                   FontSize="13"
+                                   TextColor="{AppThemeBinding Light=#374151, Dark=#E5E7EB}" />
+
+                            <Label Text="{Binding ReservationReference, StringFormat='Reservation Ref: {0}'}"
+                                   FontSize="13"
+                                   TextColor="{AppThemeBinding Light=#374151, Dark=#E5E7EB}" />
+
+                            <Label Text="{Binding PaymentReference, StringFormat='Payment Ref: {0}'}"
+                                   FontSize="13"
+                                   TextColor="{AppThemeBinding Light=#374151, Dark=#E5E7EB}" />
+
+                            <Label Text="{Binding Status, StringFormat='Status: {0}'}"
+                                   FontSize="13"
+                                   TextColor="{AppThemeBinding Light=#374151, Dark=#E5E7EB}" />
+
+                            <Label Text="{Binding ReservedAt, StringFormat='Reserved At: {0:MMM dd, yyyy hh:mm tt}'}"
+                                   FontSize="12"
+                                   TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+
+                            <Label Text="{Binding CheckInAt, StringFormat='Check In: {0:MMM dd, yyyy hh:mm tt}'}"
+                                   FontSize="12"
+                                   TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+
+                            <Label Text="{Binding CheckOutAt, StringFormat='Check Out: {0:MMM dd, yyyy hh:mm tt}'}"
+                                   FontSize="12"
+                                   TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+
+                            <Label Text="{Binding PaymentAmount, StringFormat='Amount Paid: ₱{0:F2}'}"
+                                   FontSize="12"
+                                   TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+                        </VerticalStackLayout>
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>

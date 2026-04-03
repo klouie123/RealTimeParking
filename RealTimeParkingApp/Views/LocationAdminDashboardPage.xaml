@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="RealTimeParkingApp.Views.LocationAdminDashboardPage"
+             Title="Dashboard"
+             BackgroundColor="{AppThemeBinding Light=#F8F9FB, Dark=#0F172A}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="16">
+
+            <Label Text="Welcome, Location Admin!"
+                   FontSize="26"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+
+            <Label x:Name="UsernameLabel"
+                   FontSize="16"
+                   HorizontalOptions="Center"
+                   TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+
+            <Frame CornerRadius="16"
+                   Padding="16"
+                   BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
+                   HasShadow="False"
+                   BorderColor="{AppThemeBinding Light=#E5E7EB, Dark=#334155}">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="Assigned Parking Location"
+                           FontAttributes="Bold"
+                           FontSize="14"
+                           TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+                    <Label x:Name="LocationNameLabel"
+                           Text="Loading..."
+                           FontSize="20"
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <Grid ColumnDefinitions="*,*"
+                  RowDefinitions="Auto,Auto,Auto"
+                  ColumnSpacing="12"
+                  RowSpacing="12">
+
+                <Frame Grid.Row="0"
+                       Grid.Column="0"
+                       CornerRadius="16"
+                       Padding="16"
+                       BackgroundColor="{AppThemeBinding Light=#E0F2FE, Dark=#0C4A6E}"
+                       HasShadow="False">
+                    <VerticalStackLayout>
+                        <Label Text="Total Slots"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#0F172A, Dark=White}" />
+                        <Label x:Name="TotalSlotsLabel"
+                               Text="0"
+                               FontSize="26"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#0F172A, Dark=White}" />
+                    </VerticalStackLayout>
+                </Frame>
+
+                <Frame Grid.Row="0"
+                       Grid.Column="1"
+                       CornerRadius="16"
+                       Padding="16"
+                       BackgroundColor="{AppThemeBinding Light=#DCFCE7, Dark=#14532D}"
+                       HasShadow="False">
+                    <VerticalStackLayout>
+                        <Label Text="Available"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#0F172A, Dark=White}" />
+                        <Label x:Name="AvailableSlotsLabel"
+                               Text="0"
+                               FontSize="26"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#0F172A, Dark=White}" />
+                    </VerticalStackLayout>
+                </Frame>
+
+                <Frame Grid.Row="1"
+                       Grid.Column="0"
+                       CornerRadius="16"
+                       Padding="16"
+                       BackgroundColor="{AppThemeBinding Light=#FEE2E2, Dark=#7F1D1D}"
+                       HasShadow="False">
+                    <VerticalStackLayout>
+                        <Label Text="Occupied"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#0F172A, Dark=White}" />
+                        <Label x:Name="OccupiedSlotsLabel"
+                               Text="0"
+                               FontSize="26"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#0F172A, Dark=White}" />
+                    </VerticalStackLayout>
+                </Frame>
+
+                <Frame Grid.Row="1"
+                       Grid.Column="1"
+                       CornerRadius="16"
+                       Padding="16"
+                       BackgroundColor="{AppThemeBinding Light=#FEF3C7, Dark=#78350F}"
+                       HasShadow="False">
+                    <VerticalStackLayout>
+                        <Label Text="Reserved"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#0F172A, Dark=White}" />
+                        <Label x:Name="ReservedSlotsLabel"
+                               Text="0"
+                               FontSize="26"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#0F172A, Dark=White}" />
+                    </VerticalStackLayout>
+                </Frame>
+
+                <Frame Grid.Row="2"
+                       Grid.ColumnSpan="2"
+                       CornerRadius="16"
+                       Padding="16"
+                       BackgroundColor="{AppThemeBinding Light=#F3E8FF, Dark=#581C87}"
+                       HasShadow="False">
+                    <VerticalStackLayout>
+                        <Label Text="Active Reservations"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#0F172A, Dark=White}" />
+                        <Label x:Name="ActiveReservationsLabel"
+                               Text="0"
+                               FontSize="26"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#0F172A, Dark=White}" />
+                    </VerticalStackLayout>
+                </Frame>
+            </Grid>
+
+            <Button Text="View Slots"
+                    Clicked="ViewMySlots_Clicked"
+                    BackgroundColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                    TextColor="{AppThemeBinding Light=White, Dark=#111827}"
+                    CornerRadius="12"
+                    HeightRequest="48"/>
+
+            <!--<Button Text="Manual Arrival Check"
+                    Clicked="ManualArrivalCheck_Clicked"
+                    BackgroundColor="#2563EB"
+                    TextColor="White"
+                    CornerRadius="12"
+                    HeightRequest="48"/>-->
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

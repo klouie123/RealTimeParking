@@ -78,7 +78,6 @@
             </VerticalStackLayout>
         </ScrollView>
 
-        <!-- Bottom popup / action sheet -->
         <Grid x:Name="ReservePopupOverlay"
               IsVisible="False"
               BackgroundColor="#66000000"
@@ -116,7 +115,8 @@
                            TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
 
                     <HorizontalStackLayout Spacing="10">
-                        <Button Text="Cancel"
+                        <Button x:Name="CancelReserveButton"
+                                Text="Cancel"
                                 Clicked="CancelReservePopup_Clicked"
                                 HorizontalOptions="FillAndExpand"
                                 BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
@@ -126,7 +126,8 @@
                                 CornerRadius="12"
                                 HeightRequest="46" />
 
-                        <Button Text="Reserve"
+                        <Button x:Name="ConfirmReserveButton"
+                                Text="Reserve"
                                 Clicked="ConfirmReserveButton_Clicked"
                                 HorizontalOptions="FillAndExpand"
                                 BackgroundColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
@@ -137,6 +138,5 @@
                 </VerticalStackLayout>
             </Frame>
         </Grid>
-
     </Grid>
 </ContentPage>

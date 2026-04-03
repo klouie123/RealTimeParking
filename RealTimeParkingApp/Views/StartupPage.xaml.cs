@@ -26,15 +26,23 @@ public partial class StartupPage : ContentPage
 
             if (!string.IsNullOrWhiteSpace(token))
             {
-                if (role == "Admin")
+                switch (role)
                 {
-                    Application.Current!.MainPage =
-                        App.Services.GetRequiredService<AdminShell>();
-                }
-                else
-                {
-                    Application.Current!.MainPage =
-                        App.Services.GetRequiredService<UserShell>();
+                    case "SuperAdmin":
+                        Application.Current!.MainPage =
+                            App.Services.GetRequiredService<SuperAdminShell>();
+                        break;
+
+                    case "LocationAdmin":
+                        Application.Current!.MainPage =
+                            App.Services.GetRequiredService<LocationAdminShell>();
+                        break;
+
+                    case "User":
+                    default:
+                        Application.Current!.MainPage =
+                            App.Services.GetRequiredService<UserShell>();
+                        break;
                 }
             }
             else

@@ -15,7 +15,7 @@
                        HorizontalOptions="Center"
                        TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
 
-                <Label Text="View your account details"
+                <Label Text="View your account details and shortcuts"
                        FontSize="13"
                        HorizontalOptions="Center"
                        TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
@@ -73,27 +73,25 @@
                    BorderColor="{AppThemeBinding Light=#E5E7EB, Dark=#334155}"
                    BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}">
 
-                <VerticalStackLayout Spacing="10">
-                    <Label Text="Appearance"
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Quick Actions"
                            FontSize="18"
                            FontAttributes="Bold"
                            TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
 
-                    <Label Text="Choose app theme"
-                           FontSize="13"
-                           TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+                    <Button Text="Parking History"
+                            Clicked="ParkingHistoryButton_Clicked"
+                            BackgroundColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                            TextColor="{AppThemeBinding Light=White, Dark=#111827}"
+                            CornerRadius="12"
+                            HeightRequest="48" />
 
-                    <Picker x:Name="ThemePicker"
-                            Title="Select Theme"
-                            SelectedIndexChanged="ThemePicker_SelectedIndexChanged"
-                            TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
-                            BackgroundColor="{AppThemeBinding Light=#F9FAFB, Dark=#0F172A}">
-                        <Picker.Items>
-                            <x:String>System</x:String>
-                            <x:String>Light</x:String>
-                            <x:String>Dark</x:String>
-                        </Picker.Items>
-                    </Picker>
+                    <Button Text="Settings"
+                            Clicked="SettingsButton_Clicked"
+                            BackgroundColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                            TextColor="{AppThemeBinding Light=White, Dark=#111827}"
+                            CornerRadius="12"
+                            HeightRequest="48" />
                 </VerticalStackLayout>
             </Frame>
 

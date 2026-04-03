@@ -12,28 +12,36 @@ namespace RealTimeParkingAPI.Data
         public DbSet<ParkingLocation> ParkingLocations { get; set; }
         public DbSet<ParkingHistory> ParkingHistories { get; set; }
         public DbSet<ParkingSlot> ParkingSlots { get; set; }
-        public DbSet<ParkingReservation> ParkingReservations { get; set; }
+        public DbSet<ParkingReservation> ParkingReservations { get; set; } 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<ParkingSlot>()
-                .HasOne(p => p.ParkingLocation)
-                .WithMany()
-                .HasForeignKey(p => p.ParkingLocationId)
-                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<ParkingHistory>().ToTable("ParkingHistory");
 
-            modelBuilder.Entity<ParkingReservation>()
-                .HasOne(r => r.ParkingSlot)
-                .WithMany()
-                .HasForeignKey(r => r.ParkingSlotId)
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.ParkingLocation)
+                .WithMany(p => p.AdminUsers)
+                .HasForeignKey(u => u.ParkingLocationId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ParkingSlot>()
+                .HasOne(s => s.ParkingLocation)
+                .WithMany(p => p.ParkingSlots)
+                .HasForeignKey(s => s.ParkingLocationId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<ParkingReservation>()
                 .HasOne(r => r.User)
                 .WithMany()
                 .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ParkingReservation>()
+                .HasOne(r => r.ParkingSlot)
+                .WithMany()
+                .HasForeignKey(r => r.ParkingSlotId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }
