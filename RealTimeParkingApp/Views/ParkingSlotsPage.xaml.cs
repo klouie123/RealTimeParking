@@ -20,6 +20,9 @@ public partial class ParkingSlotsPage : ContentPage
 
     private ParkingSlotUiModel? _selectedSlotForReserve;
     private bool _isReserving;
+    private string _selectedPaymentMethod = "Cash";
+
+    private const string PaymentMethodPrefix = "payment_method_";
 
     public string DestinationLatText { get; set; } = string.Empty;
     public string DestinationLngText { get; set; } = string.Empty;
@@ -41,7 +44,7 @@ public partial class ParkingSlotsPage : ContentPage
     {
         base.OnAppearing();
 
-        if (!int.TryParse(ParkingLocationIdText, out _parkingLocationId))
+        if (!int.TryParse(ParkingLocationIdText, out _parkingLocationId) || _parkingLocationId <= 0)
         {
             await DisplayAlert("Error", "Invalid parking location.", "OK");
             return;
@@ -52,8 +55,17 @@ public partial class ParkingSlotsPage : ContentPage
                 ? "Parking Slots"
                 : ParkingLocationName);
 
-        double.TryParse(DestinationLatText, NumberStyles.Any, CultureInfo.InvariantCulture, out _destinationLat);
-        double.TryParse(DestinationLngText, NumberStyles.Any, CultureInfo.InvariantCulture, out _destinationLng);
+        double.TryParse(
+            DestinationLatText,
+            NumberStyles.Any,
+            CultureInfo.InvariantCulture,
+            out _destinationLat);
+
+        double.TryParse(
+            DestinationLngText,
+            NumberStyles.Any,
+            CultureInfo.InvariantCulture,
+            out _destinationLng);
 
         await LoadSlotsAsync();
     }
@@ -70,8 +82,9 @@ public partial class ParkingSlotsPage : ContentPage
                 return;
             }
 
-            var uiSlots = slots.Select(MapToUiModel).ToList();
-            SlotsCollectionView.ItemsSource = uiSlots;
+            SlotsCollectionView.ItemsSource = slots
+                .Select(MapToUiModel)
+                .ToList();
         }
         catch (Exception ex)
         {
@@ -83,9 +96,9 @@ public partial class ParkingSlotsPage : ContentPage
     {
         var status = slot.Status?.Trim() ?? "Unknown";
 
-        var isAvailable = status.Equals("Available", StringComparison.OrdinalIgnoreCase);
-        var isReserved = status.Equals("Reserved", StringComparison.OrdinalIgnoreCase);
-        var isOccupied = status.Equals("Occupied", StringComparison.OrdinalIgnoreCase);
+        bool isAvailable = status.Equals("Available", StringComparison.OrdinalIgnoreCase);
+        bool isReserved = status.Equals("Reserved", StringComparison.OrdinalIgnoreCase);
+        bool isOccupied = status.Equals("Occupied", StringComparison.OrdinalIgnoreCase);
 
         return new ParkingSlotUiModel
         {
@@ -133,8 +146,11 @@ public partial class ParkingSlotsPage : ContentPage
             }
 
             _selectedSlotForReserve = slot;
+            _selectedPaymentMethod = "Cash";
+
             PopupSlotCodeLabel.Text = slot.SlotCode;
             PopupSlotMessageLabel.Text = $"Do you want to reserve {slot.SlotCode}?";
+            SelectedPaymentMethodLabel.Text = "Selected: Cash";
 
             await ShowReservePopupAsync();
         }
@@ -142,6 +158,18 @@ public partial class ParkingSlotsPage : ContentPage
         {
             await DisplayAlert("Error", ex.Message, "OK");
         }
+    }
+
+    private void CashMethodButton_Clicked(object sender, EventArgs e)
+    {
+        _selectedPaymentMethod = "Cash";
+        SelectedPaymentMethodLabel.Text = "Selected: Cash";
+    }
+
+    private void GcashMethodButton_Clicked(object sender, EventArgs e)
+    {
+        _selectedPaymentMethod = "GCash";
+        SelectedPaymentMethodLabel.Text = "Selected: GCash";
     }
 
     private async Task ShowReservePopupAsync()
@@ -177,33 +205,59 @@ public partial class ParkingSlotsPage : ContentPage
             if (_selectedSlotForReserve == null)
                 return;
 
+            if (_parkingLocationId <= 0)
+            {
+                await DisplayAlert("Error", "Invalid parking location.", "OK");
+                return;
+            }
+
             _isReserving = true;
             ConfirmReserveButton.IsEnabled = false;
 
-            var reservedSlotCode = _selectedSlotForReserve.SlotCode;
-            var success = await _apiService.ReserveSlotAsync(_selectedSlotForReserve.Id);
+            var selectedSlot = _selectedSlotForReserve;
+            var reservedSlotCode = selectedSlot.SlotCode;
+
+            var success = await _apiService.ReserveSlotAsync(
+                selectedSlot.Id,
+                _parkingLocationId,
+                _selectedPaymentMethod);
 
             await HideReservePopupAsync();
 
             if (!success)
             {
-                await DisplayAlert("Failed", "Could not reserve slot. It may already be reserved.", "OK");
+                await DisplayAlert(
+                    "Failed",
+                    "Could not reserve slot. It may already be reserved.",
+                    "OK");
+
                 await LoadSlotsAsync();
                 return;
             }
 
-            var destinationName = Uri.UnescapeDataString(
+            var activeParking = await _apiService.GetMyActiveParkingAsync();
+            if (activeParking != null)
+            {
+                Preferences.Set(
+                    $"{PaymentMethodPrefix}{activeParking.ReservationId}",
+                    _selectedPaymentMethod);
+            }
+
+            string destinationName = Uri.UnescapeDataString(
                 string.IsNullOrWhiteSpace(ParkingLocationName)
                     ? "Reserved Parking"
                     : ParkingLocationName);
 
             _navigationState.StartNavigation(destinationName, _destinationLat, _destinationLng);
 
-            await DisplayAlert("Success", $"Slot {reservedSlotCode} reserved successfully.", "OK");
+            await DisplayAlert(
+                "Success",
+                $"Slot {reservedSlotCode} reserved successfully.\nPayment Method: {_selectedPaymentMethod}",
+                "OK");
 
             _selectedSlotForReserve = null;
-            await LoadSlotsAsync();
 
+            await LoadSlotsAsync();
             await Shell.Current.GoToAsync(nameof(MyActiveParkingPage));
         }
         catch (Exception ex)

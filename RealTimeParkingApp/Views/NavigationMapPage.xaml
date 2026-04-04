@@ -4,6 +4,7 @@
              xmlns:maps="clr-namespace:Microsoft.Maui.Controls.Maps;assembly=Microsoft.Maui.Controls.Maps"
              x:Class="RealTimeParkingApp.Views.NavigationMapPage"
              Title="Navigation"
+             Shell.TabBarIsVisible="False"
              BackgroundColor="{AppThemeBinding Light=#F8F9FB, Dark=#0F172A}">
 
     <Grid RowDefinitions="*,Auto,Auto">
@@ -38,7 +39,7 @@
                        TextColor="{AppThemeBinding Light=#2563EB, Dark=#60A5FA}" />
 
                 <Label x:Name="SpeedLabel"
-                       Text="Speed: "
+                       Text="Speed: --"
                        FontSize="14"
                        TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
 
@@ -46,6 +47,13 @@
                        Text="Waiting for location..."
                        FontSize="13"
                        TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+
+                <Button Text="Simulate Arrival"
+                        Clicked="SimulateArrival_Clicked"
+                        BackgroundColor="#7C3AED"
+                        TextColor="White"
+                        CornerRadius="12"
+                        HeightRequest="46" />
 
                 <Button Text="Cancel Navigation"
                         BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
@@ -68,19 +76,17 @@
                HasShadow="False"
                IsVisible="False">
 
-            <VerticalStackLayout Spacing="12">
+            <VerticalStackLayout Spacing="10">
                 <Label Text="You arrived"
                        FontSize="18"
                        FontAttributes="Bold"
                        HorizontalOptions="Center"
                        TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
 
-                <Button Text="Back to Dashboard"
-                        Clicked="BackToDashboard_Clicked"
-                        BackgroundColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
-                        TextColor="{AppThemeBinding Light=White, Dark=#111827}"
-                        CornerRadius="12"
-                        HeightRequest="46" />
+                <Label Text="Returning to active parking page..."
+                       FontSize="13"
+                       HorizontalOptions="Center"
+                       TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
             </VerticalStackLayout>
         </Frame>
     </Grid>

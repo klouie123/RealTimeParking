@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="RealTimeParkingApp.Views.ParkingHistoryPage"
-             Title="Parking History"
+             x:Class="RealTimeParkingApp.Views.LocationAdminHistoryPage"
+             Title="Transaction History"
              Shell.TabBarIsVisible="False"
              BackgroundColor="{AppThemeBinding Light=#F8F9FB, Dark=#0F172A}">
 
@@ -12,7 +12,7 @@
                         SelectionMode="None">
             <CollectionView.EmptyView>
                 <VerticalStackLayout Padding="20" Spacing="6">
-                    <Label Text="No parking history found."
+                    <Label Text="No transaction history found."
                            FontSize="16"
                            HorizontalOptions="Center"
                            TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
@@ -28,10 +28,15 @@
                            BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
                            BorderColor="{AppThemeBinding Light=#E5E7EB, Dark=#334155}">
                         <VerticalStackLayout Spacing="8">
-                            <Label Text="{Binding ParkingLocationName}"
+
+                            <Label Text="{Binding UserName}"
                                    FontSize="18"
                                    FontAttributes="Bold"
                                    TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+
+                            <Label Text="{Binding ParkingLocationName, StringFormat='Location: {0}'}"
+                                   FontSize="13"
+                                   TextColor="{AppThemeBinding Light=#374151, Dark=#E5E7EB}" />
 
                             <Label Text="{Binding SlotCode, StringFormat='Slot: {0}'}"
                                    FontSize="13"
@@ -42,6 +47,14 @@
                                    TextColor="{AppThemeBinding Light=#374151, Dark=#E5E7EB}" />
 
                             <Label Text="{Binding PaymentReference, StringFormat='Payment Ref: {0}'}"
+                                   FontSize="13"
+                                   TextColor="{AppThemeBinding Light=#374151, Dark=#E5E7EB}" />
+
+                            <Label Text="{Binding PaymentMethod, StringFormat='Payment Method: {0}'}"
+                                   FontSize="13"
+                                   TextColor="{AppThemeBinding Light=#374151, Dark=#E5E7EB}" />
+
+                            <Label Text="{Binding PaymentStatus, StringFormat='Payment Status: {0}'}"
                                    FontSize="13"
                                    TextColor="{AppThemeBinding Light=#374151, Dark=#E5E7EB}" />
 

@@ -4,6 +4,7 @@
              xmlns:maps="clr-namespace:Microsoft.Maui.Controls.Maps;assembly=Microsoft.Maui.Controls.Maps"
              xmlns:vm="clr-namespace:RealTimeParkingApp.ViewModels"
              x:Class="RealTimeParkingApp.Views.MapPage"
+             Shell.TabBarIsVisible="False"
              Title="Map">
 
     <Grid>

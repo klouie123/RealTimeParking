@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="RealTimeParkingApp.Views.LocationAdminSlotsPage"
              Title="My Parking Slots"
+             Shell.TabBarIsVisible="False"
              BackgroundColor="{AppThemeBinding Light=#F8F9FB, Dark=#0F172A}">
 
     <Grid RowDefinitions="Auto,*" Padding="20">

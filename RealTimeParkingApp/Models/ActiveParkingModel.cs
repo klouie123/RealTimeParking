@@ -15,6 +15,12 @@
 
         public decimal PaymentAmount { get; set; }
 
+        public string? PaymentMethod { get; set; }
+        public string? PaymentStatus { get; set; }
+        public bool HasArrived { get; set; }
+        public bool CanGenerateArrivalQr { get; set; }
+        public bool CanGeneratePaymentQr { get; set; }
+
         public DateTime ReservedAt { get; set; }
         public DateTime? CheckInAt { get; set; }
         public DateTime? CheckOutAt { get; set; }

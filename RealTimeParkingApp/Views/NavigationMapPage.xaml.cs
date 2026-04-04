@@ -10,28 +10,40 @@ namespace RealTimeParkingApp.Views;
 [QueryProperty(nameof(DestinationLat), "destLat")]
 [QueryProperty(nameof(DestinationLng), "destLng")]
 [QueryProperty(nameof(DestinationName), "destName")]
+[QueryProperty(nameof(ReservationId), "reservationId")]
 public partial class NavigationMapPage : ContentPage
 {
     private readonly NavigationStateService _navigationState;
+    private readonly ApiService _apiService;
 
-    private Polyline? routeLine;
-    private Pin? userPin;
-    private Pin? destinationPin;
+    private Polyline? _routeLine;
+    private Pin? _userPin;
+    private Pin? _destinationPin;
 
     private bool _started;
-    private int _navigationSessionId = 0;
-
-    public string DestinationLat { get; set; }
-    public string DestinationLng { get; set; }
-    public string DestinationName { get; set; }
+    private bool _isUpdating;
+    private bool _hasReturnedAfterArrival;
+    private int _navigationSessionId;
+    private int _reservationId;
 
     private double _destLat;
     private double _destLng;
+
+    public string DestinationLat { get; set; } = string.Empty;
+    public string DestinationLng { get; set; } = string.Empty;
+    public string DestinationName { get; set; } = string.Empty;
+
+    public string ReservationId
+    {
+        get => _reservationId.ToString();
+        set => int.TryParse(value, out _reservationId);
+    }
 
     public NavigationMapPage(NavigationStateService navigationState)
     {
         InitializeComponent();
         _navigationState = navigationState;
+        _apiService = App.Services.GetRequiredService<ApiService>();
     }
 
     protected override async void OnAppearing()
@@ -41,7 +53,7 @@ public partial class NavigationMapPage : ContentPage
         if (!double.TryParse(DestinationLat, NumberStyles.Any, CultureInfo.InvariantCulture, out _destLat) ||
             !double.TryParse(DestinationLng, NumberStyles.Any, CultureInfo.InvariantCulture, out _destLng))
         {
-            await DisplayAlert("Error", "Invalid destination coordinates", "OK");
+            await DisplayAlert("Error", "Invalid destination coordinates.", "OK");
             return;
         }
 
@@ -79,29 +91,21 @@ public partial class NavigationMapPage : ContentPage
             var permission = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
             if (permission != PermissionStatus.Granted)
             {
-                await DisplayAlert("Permission", "Location permission denied", "OK");
+                await DisplayAlert("Permission", "Location permission denied.", "OK");
                 return;
             }
 
             _navigationSessionId++;
             int currentSession = _navigationSessionId;
 
-            // full UI reset
+            _hasReturnedAfterArrival = false;
             ArrivedPanel.IsVisible = false;
             StatusLabel.Text = "Loading route...";
-            DistanceLabel.Text = "Distance:";
-            SpeedLabel.Text = "Speed:";
-            EtaLabel.Text = "ETA:";
+            DistanceLabel.Text = "Distance: --";
+            SpeedLabel.Text = "Speed: --";
+            EtaLabel.Text = "ETA: --";
 
-            if (routeLine != null)
-            {
-                map.MapElements.Remove(routeLine);
-                routeLine = null;
-            }
-
-            map.Pins.Clear();
-            userPin = null;
-            destinationPin = null;
+            ClearMap();
 
             await UpdateNavigationAsync();
 
@@ -115,7 +119,7 @@ public partial class NavigationMapPage : ContentPage
 
                 MainThread.BeginInvokeOnMainThread(async () =>
                 {
-                    if (currentSession != _navigationSessionId)
+                    if (_isUpdating)
                         return;
 
                     await UpdateNavigationAsync();
@@ -132,6 +136,11 @@ public partial class NavigationMapPage : ContentPage
 
     private async Task UpdateNavigationAsync()
     {
+        if (_isUpdating)
+            return;
+
+        _isUpdating = true;
+
         try
         {
             var location = await Geolocation.GetLocationAsync(
@@ -154,14 +163,10 @@ public partial class NavigationMapPage : ContentPage
 
             double speedKph = 0;
             if (location.Speed.HasValue && location.Speed.Value > 0)
-            {
                 speedKph = location.Speed.Value * 3.6;
-            }
 
             if (speedKph < 3)
-            {
                 speedKph = 20;
-            }
 
             double etaMinutes = (distanceKm / speedKph) * 60.0;
 
@@ -172,15 +177,13 @@ public partial class NavigationMapPage : ContentPage
             DistanceLabel.Text = $"Distance: {distanceKm:F2} km";
             SpeedLabel.Text = $"Speed: {speedKph:F1} km/h";
             EtaLabel.Text = $"ETA: {Math.Ceiling(etaMinutes)} min";
-            StatusLabel.Text = "Navigating.";
+            StatusLabel.Text = "Navigating...";
 
             await DrawRouteOsrmAsync(userLocation, destination);
 
             if (distanceKm <= 0.01)
             {
-                _navigationState.HasArrived = true;
-                ArrivedPanel.IsVisible = true;
-                StatusLabel.Text = "You arrived";
+                await CompleteArrivalAsync();
             }
             else
             {
@@ -192,19 +195,49 @@ public partial class NavigationMapPage : ContentPage
             Debug.WriteLine($"Navigation update error: {ex.Message}");
             StatusLabel.Text = "Navigation update failed.";
         }
+        finally
+        {
+            _isUpdating = false;
+        }
+    }
+
+    private async Task CompleteArrivalAsync()
+    {
+        _navigationState.HasArrived = true;
+        ArrivedPanel.IsVisible = true;
+        StatusLabel.Text = "You arrived.";
+
+        try
+        {
+            if (_reservationId > 0)
+            {
+                await _apiService.MarkArrivedAsync(_reservationId);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"MarkArrivedAsync failed: {ex.Message}");
+        }
+
+        if (!_hasReturnedAfterArrival)
+        {
+            _hasReturnedAfterArrival = true;
+            await Task.Delay(1200);
+            await Shell.Current.GoToAsync("..");
+        }
     }
 
     private void UpdatePins(Location userLocation, Location destination)
     {
         map.Pins.Clear();
 
-        userPin = new Pin
+        _userPin = new Pin
         {
             Label = "You",
             Location = userLocation
         };
 
-        destinationPin = new Pin
+        _destinationPin = new Pin
         {
             Label = string.IsNullOrWhiteSpace(DestinationName)
                 ? "Destination"
@@ -212,8 +245,8 @@ public partial class NavigationMapPage : ContentPage
             Location = destination
         };
 
-        map.Pins.Add(userPin);
-        map.Pins.Add(destinationPin);
+        map.Pins.Add(_userPin);
+        map.Pins.Add(_destinationPin);
     }
 
     private async Task DrawRouteOsrmAsync(Location origin, Location destination)
@@ -246,10 +279,10 @@ public partial class NavigationMapPage : ContentPage
                 .GetProperty("geometry")
                 .GetProperty("coordinates");
 
-            if (routeLine != null)
-                map.MapElements.Remove(routeLine);
+            if (_routeLine != null)
+                map.MapElements.Remove(_routeLine);
 
-            routeLine = new Polyline
+            _routeLine = new Polyline
             {
                 StrokeColor = Colors.Blue,
                 StrokeWidth = 6
@@ -265,7 +298,7 @@ public partial class NavigationMapPage : ContentPage
                 var lng = point[0].GetDouble();
                 var lat = point[1].GetDouble();
 
-                routeLine.Geopath.Add(new Location(lat, lng));
+                _routeLine.Geopath.Add(new Location(lat, lng));
 
                 if (lat < minLat) minLat = lat;
                 if (lat > maxLat) maxLat = lat;
@@ -273,7 +306,7 @@ public partial class NavigationMapPage : ContentPage
                 if (lng > maxLng) maxLng = lng;
             }
 
-            map.MapElements.Add(routeLine);
+            map.MapElements.Add(_routeLine);
 
             var center = new Location((minLat + maxLat) / 2, (minLng + maxLng) / 2);
             var latSpan = Math.Max(0.01, maxLat - minLat);
@@ -286,6 +319,19 @@ public partial class NavigationMapPage : ContentPage
             Debug.WriteLine($"OSRM route error: {ex.Message}");
             StatusLabel.Text = "Failed to load route.";
         }
+    }
+
+    private void ClearMap()
+    {
+        if (_routeLine != null)
+        {
+            map.MapElements.Remove(_routeLine);
+            _routeLine = null;
+        }
+
+        map.Pins.Clear();
+        _userPin = null;
+        _destinationPin = null;
     }
 
     private double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
@@ -302,15 +348,21 @@ public partial class NavigationMapPage : ContentPage
             Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
 
         var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
-
         return R * c;
     }
 
-    private async void BackToDashboard_Clicked(object sender, EventArgs e)
+    private async void SimulateArrival_Clicked(object sender, EventArgs e)
     {
-        _navigationState.StopNavigation();
-        _navigationSessionId++;
-        await Shell.Current.GoToAsync(".");
+        bool confirm = await DisplayAlert(
+            "Simulate Arrival",
+            "Mark this navigation as arrived for testing?",
+            "Yes",
+            "No");
+
+        if (!confirm)
+            return;
+
+        await CompleteArrivalAsync();
     }
 
     private async void CancelNavigation_Clicked(object sender, EventArgs e)
@@ -328,21 +380,13 @@ public partial class NavigationMapPage : ContentPage
         _navigationSessionId++;
         _started = false;
 
-        if (routeLine != null)
-        {
-            map.MapElements.Remove(routeLine);
-            routeLine = null;
-        }
-
-        map.Pins.Clear();
-        userPin = null;
-        destinationPin = null;
+        ClearMap();
 
         ArrivedPanel.IsVisible = false;
         DestinationLabel.Text = "Destination";
-        DistanceLabel.Text = "Distance:";
-        SpeedLabel.Text = "Speed:";
-        EtaLabel.Text = "ETA:";
+        DistanceLabel.Text = "Distance: --";
+        SpeedLabel.Text = "Speed: --";
+        EtaLabel.Text = "ETA: --";
         StatusLabel.Text = "Navigation cancelled.";
 
         await Shell.Current.GoToAsync("..");

@@ -13,14 +13,41 @@ public partial class ProfilePage : ContentPage
     {
         base.OnAppearing();
 
-        UsernameValueLabel.Text = Preferences.Get("username", "User");
-        EmailValueLabel.Text = Preferences.Get("email", "No email");
-        RoleValueLabel.Text = Preferences.Get("user_role", "User");
+        var username = Preferences.Get("username", "User");
+        var email = Preferences.Get("email", "No email");
+        var role = Preferences.Get("user_role", "User");
+
+        UsernameValueLabel.Text = username;
+        EmailValueLabel.Text = email;
+        RoleValueLabel.Text = role;
+
+        ApplyRoleBasedActions(role);
+    }
+
+    private void ApplyRoleBasedActions(string role)
+    {
+        ParkingHistoryButton.IsVisible = false;
+        TransactionHistoryButton.IsVisible = false;
+
+        if (string.Equals(role, "User", StringComparison.OrdinalIgnoreCase))
+        {
+            ParkingHistoryButton.IsVisible = true;
+        }
+        else if (string.Equals(role, "LocationAdmin", StringComparison.OrdinalIgnoreCase) ||
+                 string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase))
+        {
+            TransactionHistoryButton.IsVisible = true;
+        }
     }
 
     private async void ParkingHistoryButton_Clicked(object sender, EventArgs e)
     {
         await Shell.Current.GoToAsync(nameof(ParkingHistoryPage));
+    }
+
+    private async void TransactionHistoryButton_Clicked(object sender, EventArgs e)
+    {
+        await Shell.Current.GoToAsync(nameof(LocationAdminHistoryPage));
     }
 
     private async void SettingsButton_Clicked(object sender, EventArgs e)

@@ -56,6 +56,7 @@ namespace RealTimeParkingApp
             builder.Services.AddTransient<MyActiveParkingPage>();
             builder.Services.AddTransient<LocationAdminSlotDetailsPage>();
             builder.Services.AddTransient<AdminQrScannerPage>();
+            builder.Services.AddTransient<LocationAdminHistoryPage>();
 
             builder.Services.AddTransient<UserShell>();
             builder.Services.AddTransient<SuperAdminShell>();

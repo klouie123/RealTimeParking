@@ -14,6 +14,7 @@ public partial class LocationAdminShell : Shell
         Routing.RegisterRoute(nameof(AdminQrScannerPage), typeof(AdminQrScannerPage));
         Routing.RegisterRoute(nameof(ParkingHistoryPage), typeof(ParkingHistoryPage));
         Routing.RegisterRoute(nameof(SettingsPage), typeof(SettingsPage));
+        Routing.RegisterRoute(nameof(LocationAdminHistoryPage), typeof(LocationAdminHistoryPage));
 
         LocationAdminDashboardContent.ContentTemplate =
             new DataTemplate(() => App.Services.GetRequiredService<LocationAdminDashboardPage>());

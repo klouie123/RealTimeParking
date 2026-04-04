@@ -229,11 +229,9 @@ namespace RealTimeParkingAPI.Controllers
                 .CountAsync(x => x.ParkingLocationId == locationId && x.IsActive && x.Status == "Occupied");
 
             var activeReservations = await _context.ParkingReservations
-                .Include(r => r.ParkingSlot)
-                .CountAsync(r =>
-                    r.ParkingSlot != null &&
-                    r.ParkingSlot.ParkingLocationId == locationId &&
-                    r.Status == "Active");
+                .CountAsync(r => r.ParkingSlot != null &&
+                     r.ParkingSlot.ParkingLocationId == locationId &&
+                     (r.Status == "Reserved" || r.Status == "Occupied"));
 
             return Ok(new LocationAdminDashboardDto
             {
@@ -299,36 +297,179 @@ namespace RealTimeParkingAPI.Controllers
             return Ok(new { message = "Slot updated successfully." });
         }
 
-        [HttpGet("my-location-reservations")]
+        [HttpGet("location-maintenance")]
         [Authorize(Roles = "LocationAdmin")]
-        public async Task<IActionResult> GetMyLocationReservations()
+        public async Task<IActionResult> GetLocationMaintenance()
         {
-            var currentUser = await GetCurrentUserAsync();
-            if (currentUser == null)
-                return Unauthorized();
+            var locationIdClaim = User.FindFirst("ParkingLocationId")?.Value;
+            if (!int.TryParse(locationIdClaim, out int parkingLocationId))
+                return Unauthorized(new { message = "Location admin is not assigned to a parking location." });
 
-            if (currentUser.ParkingLocationId == null)
-                return BadRequest(new { message = "This admin is not assigned to a parking location." });
+            var location = await _context.ParkingLocations
+                .Include(p => p.ParkingSlots)
+                .FirstOrDefaultAsync(p => p.Id == parkingLocationId);
 
-            var locationId = currentUser.ParkingLocationId.Value;
+            if (location == null)
+                return NotFound(new { message = "Parking location not found." });
 
-            var reservations = await _context.ParkingReservations
-                .Include(r => r.User)
-                .Include(r => r.ParkingSlot)
-                .Where(r => r.ParkingSlot != null && r.ParkingSlot.ParkingLocationId == locationId)
-                .Select(r => new
-                {
-                    r.Id,
-                    r.UserId,
-                    Username = r.User != null ? r.User.Username : "",
-                    SlotCode = r.ParkingSlot != null ? r.ParkingSlot.SlotCode : "",
-                    r.ReservedAt,
-                    r.Status
-                })
-                .OrderByDescending(r => r.ReservedAt)
-                .ToListAsync();
-              
-            return Ok(reservations);
+            var dto = new LocationMaintenanceDto
+            {
+                ParkingPrice = location.ParkingPrice,
+                Slots = location.ParkingSlots
+                    .OrderBy(s => s.SlotCode)
+                    .Select(s => new LocationMaintenanceSlotDto
+                    {
+                        Id = s.Id,
+                        SlotCode = s.SlotCode,
+                        EditableSlotCode = s.SlotCode,
+                        Status = s.Status,
+                        IsActive = s.IsActive
+                    })
+                    .ToList()
+            };
+
+            return Ok(dto);
         }
+
+        [HttpPut("update-parking-price")]
+        [Authorize(Roles = "LocationAdmin")]
+        public async Task<IActionResult> UpdateParkingPrice([FromBody] UpdateParkingPriceDto dto)
+        {
+            var locationIdClaim = User.FindFirst("ParkingLocationId")?.Value;
+            if (!int.TryParse(locationIdClaim, out int parkingLocationId))
+                return Unauthorized(new { message = "Location admin is not assigned to a parking location." });
+
+            var location = await _context.ParkingLocations.FirstOrDefaultAsync(p => p.Id == parkingLocationId);
+            if (location == null)
+                return NotFound(new { message = "Parking location not found." });
+
+            location.ParkingPrice = dto.ParkingPrice;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { success = true, message = "Parking price updated successfully." });
+        }
+
+        [HttpPost("add-location-slot")]
+        [Authorize(Roles = "LocationAdmin")]
+        public async Task<IActionResult> AddLocationSlot([FromBody] AddLocationSlotDto dto)
+        {
+            var locationIdClaim = User.FindFirst("ParkingLocationId")?.Value;
+            if (!int.TryParse(locationIdClaim, out int parkingLocationId))
+                return Unauthorized(new { message = "Location admin is not assigned to a parking location." });
+
+            if (string.IsNullOrWhiteSpace(dto.SlotCode))
+                return BadRequest(new { message = "Slot code is required." });
+
+            var exists = await _context.ParkingSlots.AnyAsync(s =>
+                s.ParkingLocationId == parkingLocationId &&
+                s.SlotCode == dto.SlotCode);
+
+            if (exists)
+                return BadRequest(new { message = "Slot code already exists." });
+
+            var slot = new ParkingSlot
+            {
+                ParkingLocationId = parkingLocationId,
+                SlotCode = dto.SlotCode.Trim(),
+                Status = "Available",
+                IsActive = true,
+                CreatedAt = DateTime.Now
+            };
+
+            _context.ParkingSlots.Add(slot);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { success = true, message = "Slot added successfully." });
+        }
+
+        [HttpPut("rename-slot/{slotId}")]
+        [Authorize(Roles = "LocationAdmin")]
+        public async Task<IActionResult> RenameSlot(int slotId, [FromBody] RenameSlotDto dto)
+        {
+            var locationIdClaim = User.FindFirst("ParkingLocationId")?.Value;
+            if (!int.TryParse(locationIdClaim, out int parkingLocationId))
+                return Unauthorized(new { message = "Location admin is not assigned to a parking location." });
+
+            var slot = await _context.ParkingSlots
+                .FirstOrDefaultAsync(s => s.Id == slotId && s.ParkingLocationId == parkingLocationId);
+
+            if (slot == null)
+                return NotFound(new { message = "Slot not found." });
+
+            if (string.IsNullOrWhiteSpace(dto.SlotCode))
+                return BadRequest(new { message = "Slot code is required." });
+
+            var exists = await _context.ParkingSlots.AnyAsync(s =>
+                s.ParkingLocationId == parkingLocationId &&
+                s.Id != slotId &&
+                s.SlotCode == dto.SlotCode);
+
+            if (exists)
+                return BadRequest(new { message = "Another slot already uses this code." });
+
+            slot.SlotCode = dto.SlotCode.Trim();
+            await _context.SaveChangesAsync();
+
+            return Ok(new { success = true, message = "Slot renamed successfully." });
+        }
+
+        [HttpPut("toggle-slot-active/{slotId}")]
+        [Authorize(Roles = "LocationAdmin")]
+        public async Task<IActionResult> ToggleSlotActive(int slotId, [FromBody] ToggleSlotActiveDto dto)
+        {
+            var locationIdClaim = User.FindFirst("ParkingLocationId")?.Value;
+            if (!int.TryParse(locationIdClaim, out int parkingLocationId))
+                return Unauthorized(new { message = "Location admin is not assigned to a parking location." });
+
+            var slot = await _context.ParkingSlots
+                .FirstOrDefaultAsync(s => s.Id == slotId && s.ParkingLocationId == parkingLocationId);
+
+            if (slot == null)
+                return NotFound(new { message = "Slot not found." });
+
+            slot.IsActive = dto.IsActive;
+
+            if (!slot.IsActive && slot.Status == "Available")
+                slot.Status = "Inactive";
+
+            if (slot.IsActive && slot.Status == "Inactive")
+                slot.Status = "Available";
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { success = true, message = "Slot status updated successfully." });
+        }
+
+        //[HttpGet("my-location-reservations")]
+        //[Authorize(Roles = "LocationAdmin")]
+        //public async Task<IActionResult> GetMyLocationReservations()
+        //{
+        //    var currentUser = await GetCurrentUserAsync();
+        //    if (currentUser == null)
+        //        return Unauthorized();
+
+        //    if (currentUser.ParkingLocationId == null)
+        //        return BadRequest(new { message = "This admin is not assigned to a parking location." });
+
+        //    var locationId = currentUser.ParkingLocationId.Value;
+
+        //    var reservations = await _context.ParkingReservations
+        //        .Include(r => r.User)
+        //        .Include(r => r.ParkingSlot)
+        //        .Where(r => r.ParkingSlot != null && r.ParkingSlot.ParkingLocationId == locationId)
+        //        .Select(r => new
+        //        {
+        //            r.Id,
+        //            r.UserId,
+        //            Username = r.User != null ? r.User.Username : "",
+        //            SlotCode = r.ParkingSlot != null ? r.ParkingSlot.SlotCode : "",
+        //            r.ReservedAt,
+        //            r.Status
+        //        })
+        //        .OrderByDescending(r => r.ReservedAt)
+        //        .ToListAsync();
+
+        //    return Ok(reservations);
+        //}
     }
 }

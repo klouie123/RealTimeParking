@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:zxing="clr-namespace:ZXing.Net.Maui.Controls;assembly=ZXing.Net.Maui.Controls"
              x:Class="RealTimeParkingApp.Views.MyActiveParkingPage"
              Title="My Active Parking"
+             Shell.TabBarIsVisible="False"
              BackgroundColor="{AppThemeBinding Light=#F8F9FB, Dark=#0F172A}">
 
     <ScrollView>
@@ -25,6 +25,7 @@
                     <Label x:Name="StatusLabel" FontSize="14" />
                     <Label x:Name="ReferenceLabel" FontSize="14" />
                     <Label x:Name="PaymentLabel" FontSize="14" />
+                    <Label x:Name="PaymentMethodLabel" FontSize="14" />
                 </VerticalStackLayout>
             </Frame>
 
@@ -34,16 +35,29 @@
                    BorderColor="{AppThemeBinding Light=#E5E7EB, Dark=#334155}"
                    HasShadow="False">
                 <VerticalStackLayout Spacing="10">
-                    <Label Text="QR Code / Reference"
+                    <Label x:Name="QrSectionTitleLabel"
+                           Text="QR Code"
                            FontSize="18"
                            FontAttributes="Bold" />
+
                     <Label x:Name="QrTextLabel"
-                           FontSize="16"
-                           HorizontalOptions="Center" />
+                           FontSize="15"
+                           HorizontalOptions="Center"
+                           HorizontalTextAlignment="Center" />
+
                     <Image x:Name="QrImage"
-                           HeightRequest="200"
-                           WidthRequest="200"
+                           HeightRequest="220"
+                           WidthRequest="220"
                            HorizontalOptions="Center" />
+
+                    <Button x:Name="GenerateQrButton"
+                            Text="Generate QR Again"
+                            Clicked="GenerateQr_Clicked"
+                            IsVisible="False"
+                            BackgroundColor="#0F766E"
+                            TextColor="White"
+                            CornerRadius="12"
+                            HeightRequest="46" />
                 </VerticalStackLayout>
             </Frame>
 
@@ -55,10 +69,38 @@
                     CornerRadius="12"
                     HeightRequest="48" />
 
+            <Button x:Name="CashButton"
+                    Text="Continue with Cash"
+                    Clicked="CashButton_Clicked"
+                    IsVisible="False"
+                    BackgroundColor="#D97706"
+                    TextColor="White"
+                    CornerRadius="12"
+                    HeightRequest="48" />
+
+            <Button x:Name="GeneratePaymentQrButton"
+                    Text="Generate GCash Payment QR"
+                    Clicked="GeneratePaymentQr_Clicked"
+                    IsVisible="False"
+                    BackgroundColor="#7C3AED"
+                    TextColor="White"
+                    CornerRadius="12"
+                    HeightRequest="48" />
+
+            <Button x:Name="OpenPaymentButton"
+                    Text="Open Payment"
+                    Clicked="OpenPayment_Clicked"
+                    IsVisible="False"
+                    BackgroundColor="#059669"
+                    TextColor="White"
+                    CornerRadius="12"
+                    HeightRequest="48" />
+
             <Button x:Name="DoneParkingButton"
                     Text="Done Parking"
                     Clicked="DoneParking_Clicked"
-                    BackgroundColor="#D97706"
+                    IsVisible="False"
+                    BackgroundColor="#B45309"
                     TextColor="White"
                     CornerRadius="12"
                     HeightRequest="48" />

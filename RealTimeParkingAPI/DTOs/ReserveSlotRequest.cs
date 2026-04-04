@@ -1,10 +1,10 @@
-﻿namespace RealTimeParkingAPI.DTOs
-{
-    public class ReserveSlotRequest
+﻿    namespace RealTimeParkingAPI.DTOs
     {
-        public int UserId { get; set; }
-        public int ParkingSlotId { get; set; }
-        public DateTime ReservedAt { get; set; }
-        public DateTime ExpiresAt { get; set; }
+        public class ReserveSlotRequest
+        {
+            public int UserId { get; set; }
+            public int ParkingSlotId { get; set; }
+            public DateTime ReservedAt { get; set; }
+            public DateTime ExpiresAt { get; set; }
+        }
     }
-}

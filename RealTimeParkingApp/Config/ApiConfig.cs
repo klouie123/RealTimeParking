@@ -9,7 +9,7 @@ namespace RealTimeParkingApp.Config
             get
             {
 #if ANDROID
-                bool useNgrok = true;
+                bool useNgrok = false;
 
                 // PRIORITY 1: Emulator
                 if (DeviceInfo.DeviceType == DeviceType.Virtual)

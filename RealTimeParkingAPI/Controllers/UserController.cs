@@ -1,97 +1,99 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using RealTimeParkingAPI.Data;
+using RealTimeParkingAPI.DTOs;
+using RealTimeParkingAPI.Helpers;
 using RealTimeParkingAPI.Models;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace RealTimeParkingAPI.Controllers
 {
-    [ApiController]
     [Route("api/[controller]")]
+    [ApiController]
     public class UserController : ControllerBase
     {
         private readonly AppDbContext _context;
-        private readonly IConfiguration _configuration;
+        private readonly IConfiguration _config;
 
-        public UserController(AppDbContext context, IConfiguration configuration)
+        public UserController(AppDbContext context, IConfiguration config)
         {
             _context = context;
-            _configuration = configuration;
+            _config = config;
         }
 
-        private string HashPassword(string password)
+        [HttpGet]
+        [Authorize(Roles = "SuperAdmin")]
+        public async Task<ActionResult<IEnumerable<User>>> GetUsers()
         {
-            using var sha256 = SHA256.Create();
-            var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-            return Convert.ToBase64String(hashedBytes);
+            return await _context.Users.ToListAsync();
+        }
+
+        [HttpGet("{id}")]
+        [Authorize(Roles = "SuperAdmin")]
+        public async Task<ActionResult<User>> GetUser(int id)
+        {
+            var user = await _context.Users.FindAsync(id);
+
+            if (user == null)
+                return NotFound();
+
+            return user;
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] User user)
+        [AllowAnonymous]
+        public async Task<IActionResult> Register([FromBody] RegisterUserDto dto)
         {
-            user.Username = user.Username?.Trim();
-            user.Email = user.Email?.Trim();
-            user.FirstName = user.FirstName?.Trim();
-            user.LastName = user.LastName?.Trim();
-            user.MiddleName = user.MiddleName?.Trim();
+            if (await _context.Users.AnyAsync(u => u.Username == dto.Username))
+                return BadRequest(new { message = "Username already exists." });
 
-            if (string.IsNullOrWhiteSpace(user.Username) ||
-                string.IsNullOrWhiteSpace(user.PasswordHash) ||
-                string.IsNullOrWhiteSpace(user.Email) ||
-                string.IsNullOrWhiteSpace(user.FirstName) ||
-                string.IsNullOrWhiteSpace(user.LastName))
+            if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
+                return BadRequest(new { message = "Email already exists." });
+
+            var user = new User
             {
-                return BadRequest("Username, First Name, Last Name, Email, and Password are required.");
-            }
-
-            var normalizedUsername = user.Username.ToLower();
-            var normalizedEmail = user.Email.ToLower();
-
-            if (await _context.Users.AnyAsync(u =>
-                    u.Username.ToLower() == normalizedUsername ||
-                    u.Email.ToLower() == normalizedEmail))
-            {
-                return BadRequest("Username or Email already exists.");
-            }
-
-            var rawPassword = user.PasswordHash;
-            user.PasswordHash = HashPassword(rawPassword);
-
-            user.Role = "User";
-            user.CreatedAt = DateTime.UtcNow;
+                Username = dto.Username,
+                FirstName = dto.FirstName,
+                MiddleName = dto.MiddleName,
+                LastName = dto.LastName,
+                Email = dto.Email,
+                PasswordHash = PasswordHelper.HashPassword(dto.Password),
+                Role = "User",
+                CreatedAt = DateTime.Now
+            };
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            return await Login(new LoginRequest
+            return Ok(new
             {
-                UsernameOrEmail = user.Username,
-                Password = rawPassword
+                message = "Registration successful",
+                user.Id,
+                user.Username,
+                user.Email,
+                user.Role
             });
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginRequest request)
+        [AllowAnonymous]
+        public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
         {
-            var normalizedInput = request.UsernameOrEmail.Trim().ToLower();
+            var hashedPassword = PasswordHelper.HashPassword(request.Password);
 
-            var user = await _context.Users
-                .Include(u => u.ParkingLocation)
-                .FirstOrDefaultAsync(u =>
-                    u.Email.ToLower() == normalizedInput ||
-                    u.Username.ToLower() == normalizedInput);
+            var user = await _context.Users.FirstOrDefaultAsync(u =>
+                (u.Username == request.UsernameOrEmail || u.Email == request.UsernameOrEmail) &&
+                u.PasswordHash == hashedPassword);
 
             if (user == null)
-                return Unauthorized("User not found");
+                return Unauthorized(new { message = "Invalid username/email or password." });
 
-            var hashedInput = HashPassword(request.Password);
-            if (user.PasswordHash != hashedInput)
-                return Unauthorized("Invalid password");
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(_config["Jwt:Key"]!);
 
             var claims = new List<Claim>
             {
@@ -105,122 +107,29 @@ namespace RealTimeParkingAPI.Controllers
                 claims.Add(new Claim("ParkingLocationId", user.ParkingLocationId.Value.ToString()));
             }
 
-            var key = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!)
-            );
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.UtcNow.AddDays(7),
+                Issuer = _config["Jwt:Issuer"],
+                Audience = _config["Jwt:Audience"],
+                SigningCredentials = new SigningCredentials(
+                    new SymmetricSecurityKey(key),
+                    SecurityAlgorithms.HmacSha256Signature)
+            };
 
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            var token = new JwtSecurityToken(
-                issuer: _configuration["Jwt:Issuer"],
-                audience: _configuration["Jwt:Audience"],
-                claims: claims,
-                expires: DateTime.Now.AddHours(12),
-                signingCredentials: creds
-            );
-
-            var jwt = new JwtSecurityTokenHandler().WriteToken(token);
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            var jwt = tokenHandler.WriteToken(token);
 
             return Ok(new
             {
-                isSuccess = true,
-                userId = user.Id,
-                token = jwt,
-                role = user.Role,
-                username = user.Username,
-                email = user.Email,
-                parkingLocationId = user.ParkingLocationId,
-                parkingLocationName = user.ParkingLocation != null ? user.ParkingLocation.Name : null
+                Token = jwt,
+                UserId = user.Id,
+                Email = user.Email,
+                Username = user.Username,
+                Role = user.Role,
+                ParkingLocationId = user.ParkingLocationId
             });
-        }
-
-        [HttpGet("my-history")]
-        [Authorize(Roles = "User")]
-        public async Task<IActionResult> GetMyHistory()
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdClaim, out int userId))
-                return Unauthorized();
-
-            var history = await _context.ParkingHistories
-                .Where(h => h.UserId == userId)
-                .OrderByDescending(h => h.ReservedAt)
-                .Select(h => new
-                {
-                    h.Id,
-                    ParkingLocationName = h.ParkingLocation != null ? h.ParkingLocation.Name : "Parking Location",
-                    SlotCode = h.ParkingSlot != null ? h.ParkingSlot.SlotCode : "N/A",
-                    h.ReservationReference,
-                    h.PaymentReference,
-                    h.ReservedAt,
-                    h.CheckInAt,
-                    h.CheckOutAt,
-                    h.PaymentAmount,
-                    h.Status
-                })
-                .ToListAsync();
-
-            return Ok(history);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> GetUsers()
-        {
-            var users = await _context.Users
-                .Include(u => u.ParkingLocation)
-                .Select(u => new
-                {
-                    u.Id,
-                    u.Username,
-                    u.FirstName,
-                    u.MiddleName,
-                    u.LastName,
-                    u.Email,
-                    u.Role,
-                    u.ParkingLocationId,
-                    ParkingLocationName = u.ParkingLocation != null ? u.ParkingLocation.Name : null,
-                    u.CreatedAt
-                })
-                .ToListAsync();
-
-            return Ok(users);
-        }
-
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetUser(int id)
-        {
-            var user = await _context.Users
-                .Include(u => u.ParkingLocation)
-                .FirstOrDefaultAsync(u => u.Id == id);
-
-            if (user == null)
-                return NotFound();
-
-            return Ok(new
-            {
-                user.Id,
-                user.Username,
-                user.FirstName,
-                user.MiddleName,
-                user.LastName,
-                user.Email,
-                user.Role,
-                user.ParkingLocationId,
-                ParkingLocationName = user.ParkingLocation != null ? user.ParkingLocation.Name : null,
-                user.CreatedAt
-            });
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> CreateUser(User user)
-        {
-            user.PasswordHash = HashPassword(user.PasswordHash);
-            user.CreatedAt = DateTime.UtcNow;
-
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-
-            return Ok(user);
         }
     }
 }

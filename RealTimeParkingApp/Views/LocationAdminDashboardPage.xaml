@@ -133,19 +133,33 @@
                 </Frame>
             </Grid>
 
-            <Button Text="View Slots"
-                    Clicked="ViewMySlots_Clicked"
-                    BackgroundColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
-                    TextColor="{AppThemeBinding Light=White, Dark=#111827}"
-                    CornerRadius="12"
-                    HeightRequest="48"/>
+            <Label Text="Quick Actions"
+                   FontSize="18"
+                   FontAttributes="Bold"
+                   Margin="0,6,0,0"
+                   TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
 
-            <!--<Button Text="Manual Arrival Check"
-                    Clicked="ManualArrivalCheck_Clicked"
-                    BackgroundColor="#2563EB"
-                    TextColor="White"
-                    CornerRadius="12"
-                    HeightRequest="48"/>-->
+            <Grid ColumnDefinitions="*,*"
+                  ColumnSpacing="12"
+                  RowSpacing="12">
+
+                <Button Grid.Column="0"
+                        Text="View Slots"
+                        Clicked="ViewMySlots_Clicked"
+                        BackgroundColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                        TextColor="{AppThemeBinding Light=White, Dark=#111827}"
+                        CornerRadius="12"
+                        HeightRequest="52" />
+
+                <Button Grid.Column="1"
+                        Text="Maintenance"
+                        Clicked="OpenMaintenance_Clicked"
+                        BackgroundColor="#2563EB"
+                        TextColor="White"
+                        CornerRadius="12"
+                        HeightRequest="52" />
+            </Grid>
+
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

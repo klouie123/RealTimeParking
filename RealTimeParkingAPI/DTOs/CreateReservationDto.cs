@@ -4,6 +4,6 @@
     {
         public int ParkingSlotId { get; set; }
         public int ParkingLocationId { get; set; }
-        public string PaymentMethod { get; set; } = "Gcash";
+        public string PaymentMethod { get; set; } = "Cash";
     }
 }

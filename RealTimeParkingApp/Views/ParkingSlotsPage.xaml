@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="RealTimeParkingApp.Views.ParkingSlotsPage"
              Title="Parking Slots"
+             Shell.TabBarIsVisible="False"
              BackgroundColor="{AppThemeBinding Light=#F8F9FB, Dark=#0F172A}">
 
     <Grid>
@@ -45,7 +46,6 @@
                                 </Frame.GestureRecognizers>
 
                                 <VerticalStackLayout Spacing="10">
-
                                     <Grid ColumnDefinitions="*,Auto">
                                         <Label Text="{Binding SlotCode}"
                                                FontSize="18"
@@ -68,13 +68,11 @@
                                            FontSize="12"
                                            LineBreakMode="WordWrap"
                                            TextColor="{Binding SlotSubTextColor}" />
-
                                 </VerticalStackLayout>
                             </Frame>
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
                 </CollectionView>
-
             </VerticalStackLayout>
         </ScrollView>
 
@@ -111,6 +109,36 @@
 
                     <Label x:Name="PopupSlotMessageLabel"
                            Text="Do you want to reserve this slot?"
+                           FontSize="13"
+                           TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+
+                    <Label Text="Select payment method"
+                           FontSize="14"
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+
+                    <HorizontalStackLayout Spacing="10">
+                        <Button x:Name="CashMethodButton"
+                                Text="Cash"
+                                Clicked="CashMethodButton_Clicked"
+                                HorizontalOptions="FillAndExpand"
+                                BackgroundColor="#D97706"
+                                TextColor="White"
+                                CornerRadius="12"
+                                HeightRequest="46" />
+
+                        <Button x:Name="GcashMethodButton"
+                                Text="GCash"
+                                Clicked="GcashMethodButton_Clicked"
+                                HorizontalOptions="FillAndExpand"
+                                BackgroundColor="#2563EB"
+                                TextColor="White"
+                                CornerRadius="12"
+                                HeightRequest="46" />
+                    </HorizontalStackLayout>
+
+                    <Label x:Name="SelectedPaymentMethodLabel"
+                           Text="Selected: Cash"
                            FontSize="13"
                            TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
 

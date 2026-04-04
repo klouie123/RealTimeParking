@@ -26,7 +26,6 @@
                    HasShadow="False"
                    BorderColor="{AppThemeBinding Light=#E5E7EB, Dark=#334155}"
                    BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}">
-
                 <VerticalStackLayout Spacing="14">
 
                     <VerticalStackLayout Spacing="4">
@@ -72,15 +71,25 @@
                    HasShadow="False"
                    BorderColor="{AppThemeBinding Light=#E5E7EB, Dark=#334155}"
                    BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}">
-
                 <VerticalStackLayout Spacing="12">
                     <Label Text="Quick Actions"
                            FontSize="18"
                            FontAttributes="Bold"
                            TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
 
-                    <Button Text="Parking History"
+                    <Button x:Name="ParkingHistoryButton"
+                            Text="Parking History"
                             Clicked="ParkingHistoryButton_Clicked"
+                            IsVisible="False"
+                            BackgroundColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                            TextColor="{AppThemeBinding Light=White, Dark=#111827}"
+                            CornerRadius="12"
+                            HeightRequest="48" />
+
+                    <Button x:Name="TransactionHistoryButton"
+                            Text="Transaction History"
+                            Clicked="TransactionHistoryButton_Clicked"
+                            IsVisible="False"
                             BackgroundColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
                             TextColor="{AppThemeBinding Light=White, Dark=#111827}"
                             CornerRadius="12"
@@ -103,7 +112,6 @@
                     CornerRadius="12"
                     HeightRequest="48"
                     Clicked="LogoutButton_Clicked" />
-
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

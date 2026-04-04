@@ -1,6 +1,8 @@
 ﻿using Newtonsoft.Json;
 using RealTimeParkingApp.Config;
+using RealTimeParkingApp.DTOs;
 using RealTimeParkingApp.Models;
+using System.Buffers.Text;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -523,7 +525,12 @@ namespace RealTimeParkingApp.Services
                     Encoding.UTF8,
                     "application/json");
 
-                var response = await _httpClient.PostAsync("reservations/done-parking", content);
+                var request = new HttpRequestMessage(HttpMethod.Put, "reservations/done-parking")
+                {
+                    Content = content
+                };
+
+                var response = await _httpClient.SendAsync(request);
                 var json = await response.Content.ReadAsStringAsync();
 
                 if (!response.IsSuccessStatusCode)
@@ -538,7 +545,7 @@ namespace RealTimeParkingApp.Services
             }
         }
 
-        public async Task<SlotDetailsModel?> GetAdminSlotDetailsAsync(int slotId)
+        public async Task<AdminSlotDetailsModel?> GetAdminSlotDetailsAsync(int slotId)
         {
             try
             {
@@ -550,7 +557,7 @@ namespace RealTimeParkingApp.Services
                 if (!response.IsSuccessStatusCode)
                     return null;
 
-                return JsonConvert.DeserializeObject<SlotDetailsModel>(json);
+                return JsonConvert.DeserializeObject<AdminSlotDetailsModel>(json);
             }
             catch
             {
@@ -662,14 +669,19 @@ namespace RealTimeParkingApp.Services
             }
         }
 
-        public async Task<bool> ReserveSlotAsync(int parkingSlotId)
+        public async Task<bool> ReserveSlotAsync(int parkingSlotId, int parkingLocationId, string paymentMethod)
         {
             try
             {
                 RestoreTokenFromPreferences();
 
                 var content = new StringContent(
-                    JsonConvert.SerializeObject(new { parkingSlotId }),
+                    JsonConvert.SerializeObject(new
+                    {
+                        parkingSlotId,
+                        parkingLocationId,
+                        paymentMethod
+                    }),
                     Encoding.UTF8,
                     "application/json");
 
@@ -692,20 +704,16 @@ namespace RealTimeParkingApp.Services
         {
             try
             {
-                var token = Preferences.Get("jwt_token", string.Empty);
+                RestoreTokenFromPreferences();
 
-                if (string.IsNullOrWhiteSpace(token))
-                    return new List<ParkingHistoryItem>();
+                var response = await _httpClient.GetAsync("user/my-history");
+                var json = await response.Content.ReadAsStringAsync();
 
-                _httpClient.DefaultRequestHeaders.Authorization =
-                    new AuthenticationHeaderValue("Bearer", token);
-
-                var response = await _httpClient.GetAsync("reservations/my-history");
+                System.Diagnostics.Debug.WriteLine($"GetParkingHistoryAsync status: {response.StatusCode}");
+                System.Diagnostics.Debug.WriteLine($"GetParkingHistoryAsync body: {json}");
 
                 if (!response.IsSuccessStatusCode)
                     return new List<ParkingHistoryItem>();
-
-                var json = await response.Content.ReadAsStringAsync();
 
                 return JsonSerializer.Deserialize<List<ParkingHistoryItem>>(json,
                     new JsonSerializerOptions
@@ -713,9 +721,306 @@ namespace RealTimeParkingApp.Services
                         PropertyNameCaseInsensitive = true
                     }) ?? new List<ParkingHistoryItem>();
             }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"GetParkingHistoryAsync error: {ex}");
+                return new List<ParkingHistoryItem>();
+            }
+        }
+
+        public async Task<bool> MarkArrivedAsync(int reservationId)
+        {
+            try
+            {
+                RestoreTokenFromPreferences();
+
+                var response = await _httpClient.PostAsync($"reservations/mark-arrived/{reservationId}", null);
+                var json = await response.Content.ReadAsStringAsync();
+
+                System.Diagnostics.Debug.WriteLine($"MarkArrivedAsync status: {response.StatusCode}");
+                System.Diagnostics.Debug.WriteLine($"MarkArrivedAsync body: {json}");
+
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"MarkArrivedAsync error: {ex}");
+                return false;
+            }
+        }
+
+        public async Task<List<LocationTransactionItem>> GetLocationTransactionHistoryAsync()
+        {
+            try
+            {
+                RestoreTokenFromPreferences();
+
+                var response = await _httpClient.GetAsync("user/location-transactions");
+                var json = await response.Content.ReadAsStringAsync();
+
+                System.Diagnostics.Debug.WriteLine($"GetLocationTransactionHistoryAsync status: {response.StatusCode}");
+                System.Diagnostics.Debug.WriteLine($"GetLocationTransactionHistoryAsync body: {json}");
+
+                if (!response.IsSuccessStatusCode)
+                    return new List<LocationTransactionItem>();
+
+                return JsonSerializer.Deserialize<List<LocationTransactionItem>>(json,
+                    new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    }) ?? new List<LocationTransactionItem>();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"GetLocationTransactionHistoryAsync error: {ex}");
+                return new List<LocationTransactionItem>();
+            }
+        }
+
+        public async Task<PaymentRequestDto?> CreatePaymentRequestAsync(int reservationId)
+        {
+            try
+            {
+                RestoreTokenFromPreferences();
+
+                var response = await _httpClient.PostAsync($"reservations/create-payment-request/{reservationId}", null);   
+                var json = await response.Content.ReadAsStringAsync();
+
+                System.Diagnostics.Debug.WriteLine($"CreatePaymentRequestAsync status: {response.StatusCode}");
+                System.Diagnostics.Debug.WriteLine($"CreatePaymentRequestAsync body: {json}");
+
+                if (!response.IsSuccessStatusCode)
+                    return null;
+
+                return JsonSerializer.Deserialize<PaymentRequestDto>(json,
+                    new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"CreatePaymentRequestAsync error: {ex}");
+                return null;
+            }
+        }
+
+        public async Task<bool> MarkPaymentPaidAsync(string paymentReference)
+        {
+            try
+            {
+                RestoreTokenFromPreferences();
+
+                var response = await _httpClient.PostAsync($"reservations/mark-paid/{paymentReference}", null);
+                var json = await response.Content.ReadAsStringAsync();
+
+                System.Diagnostics.Debug.WriteLine($"MarkPaymentPaidAsync status: {response.StatusCode}");
+                System.Diagnostics.Debug.WriteLine($"MarkPaymentPaidAsync body: {json}");
+
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"MarkPaymentPaidAsync error: {ex}");
+                return false;
+            }
+        }
+
+        public async Task<SimpleActionResult?> CashCheckoutAsync(int slotId)
+        {
+            try
+            {
+                RestoreTokenFromPreferences();
+
+                var request = new HttpRequestMessage(HttpMethod.Put, $"reservations/cash-checkout/{slotId}");
+                var response = await _httpClient.SendAsync(request);
+                var json = await response.Content.ReadAsStringAsync();
+
+                System.Diagnostics.Debug.WriteLine($"CashCheckoutAsync status: {response.StatusCode}");
+                System.Diagnostics.Debug.WriteLine($"CashCheckoutAsync body: {json}");
+
+                var result = System.Text.Json.JsonSerializer.Deserialize<SimpleActionResult>(
+                    json,
+                    new System.Text.Json.JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return result ?? new SimpleActionResult
+                    {
+                        Success = true,
+                        Message = "Cash checkout successful."
+                    };
+                }
+
+                return result ?? new SimpleActionResult
+                {
+                    Success = false,
+                    Message = string.IsNullOrWhiteSpace(json) ? "Cash checkout failed." : json
+                };
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"CashCheckoutAsync error: {ex}");
+                return new SimpleActionResult
+                {
+                    Success = false,
+                    Message = ex.Message
+                };
+            }
+        }
+
+        public async Task<PaymentRequestDto?> GetPaymentRequestByReservationAsync(int reservationId)
+        {
+            try
+            {
+                RestoreTokenFromPreferences();
+
+                var response = await _httpClient.GetAsync($"reservations/by-reservation/{reservationId}");
+                var json = await response.Content.ReadAsStringAsync();
+
+                System.Diagnostics.Debug.WriteLine($"GetPaymentRequestByReservationAsync status: {response.StatusCode}");
+                System.Diagnostics.Debug.WriteLine($"GetPaymentRequestByReservationAsync body: {json}");
+
+                if (!response.IsSuccessStatusCode)
+                    return null;
+
+                return JsonSerializer.Deserialize<PaymentRequestDto>(json,
+                    new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"GetPaymentRequestByReservationAsync error: {ex}");
+                return null;
+            }
+        }
+
+        public async Task<LocationMaintenanceModel?> GetLocationMaintenanceAsync()
+        {
+            try
+            {
+                RestoreTokenFromPreferences();
+
+                var response = await _httpClient.GetAsync("admin/location-maintenance");
+                var json = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                    return null;
+
+                return JsonConvert.DeserializeObject<LocationMaintenanceModel>(json);
+            }
             catch
             {
-                return new List<ParkingHistoryItem>();
+                return null;
+            }
+        }
+
+        public async Task<SimpleActionResult?> UpdateParkingPriceAsync(decimal price)
+        {
+            try
+            {
+                RestoreTokenFromPreferences();
+
+                var content = new StringContent(
+                    JsonConvert.SerializeObject(new { parkingPrice = price }),
+                    Encoding.UTF8,
+                    "application/json");
+
+                var response = await _httpClient.PutAsync("admin/update-parking-price", content);
+                var json = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                    return new SimpleActionResult { Success = false, Message = json };
+
+                return JsonConvert.DeserializeObject<SimpleActionResult>(json)
+                       ?? new SimpleActionResult { Success = true, Message = "Parking price updated." };
+            }
+            catch (Exception ex)
+            {
+                return new SimpleActionResult { Success = false, Message = ex.Message };
+            }
+        }
+
+        public async Task<SimpleActionResult?> AddParkingSlotAsync(string slotCode)
+        {
+            try
+            {
+                RestoreTokenFromPreferences();
+
+                var content = new StringContent(
+                    JsonConvert.SerializeObject(new { slotCode }),
+                    Encoding.UTF8,
+                    "application/json");
+
+                var response = await _httpClient.PostAsync("admin/add-location-slot", content);
+                var json = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                    return new SimpleActionResult { Success = false, Message = json };
+
+                return JsonConvert.DeserializeObject<SimpleActionResult>(json)
+                       ?? new SimpleActionResult { Success = true, Message = "Slot added successfully." };
+            }
+            catch (Exception ex)
+            {
+                return new SimpleActionResult { Success = false, Message = ex.Message };
+            }
+        }
+
+        public async Task<SimpleActionResult?> RenameParkingSlotAsync(int slotId, string newSlotCode)
+        {
+            try
+            {
+                RestoreTokenFromPreferences();
+
+                var content = new StringContent(
+                    JsonConvert.SerializeObject(new { slotCode = newSlotCode }),
+                    Encoding.UTF8,
+                    "application/json");
+
+                var response = await _httpClient.PutAsync($"admin/rename-slot/{slotId}", content);
+                var json = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                    return new SimpleActionResult { Success = false, Message = json };
+
+                return JsonConvert.DeserializeObject<SimpleActionResult>(json)
+                       ?? new SimpleActionResult { Success = true, Message = "Slot renamed successfully." };
+            }
+            catch (Exception ex)
+            {
+                return new SimpleActionResult { Success = false, Message = ex.Message };
+            }
+        }
+
+        public async Task<SimpleActionResult?> ToggleParkingSlotActiveAsync(int slotId, bool isActive)
+        {
+            try
+            {
+                RestoreTokenFromPreferences();
+
+                var content = new StringContent(
+                    JsonConvert.SerializeObject(new { isActive }),
+                    Encoding.UTF8,
+                    "application/json");
+
+                var response = await _httpClient.PutAsync($"admin/toggle-slot-active/{slotId}", content);
+                var json = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                    return new SimpleActionResult { Success = false, Message = json };
+
+                return JsonConvert.DeserializeObject<SimpleActionResult>(json)
+                       ?? new SimpleActionResult { Success = true, Message = "Slot updated successfully." };
+            }
+            catch (Exception ex)
+            {
+                return new SimpleActionResult { Success = false, Message = ex.Message };
             }
         }
     }

@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="RealTimeParkingApp.Views.LocationAdminMaintenancePage"
+             Title="Maintenance"
+             Shell.TabBarIsVisible="False"
+             BackgroundColor="{AppThemeBinding Light=#F8F9FB, Dark=#0F172A}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="16">
+
+            <VerticalStackLayout Spacing="4">
+                <Label Text="Parking Maintenance"
+                       FontSize="26"
+                       FontAttributes="Bold"
+                       TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+
+                <Label Text="Manage parking price, slots, and tools for your location."
+                       FontSize="14"
+                       TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+            </VerticalStackLayout>
+
+            <Frame CornerRadius="18"
+                   Padding="16"
+                   HasShadow="False"
+                   BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
+                   BorderColor="{AppThemeBinding Light=#E5E7EB, Dark=#334155}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Parking Price"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+
+                    <Label Text="Set your parking fee for this location"
+                           FontSize="13"
+                           TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+
+                    <Entry x:Name="ParkingPriceEntry"
+                           Keyboard="Numeric"
+                           Placeholder="Enter price"
+                           BackgroundColor="{AppThemeBinding Light=#F9FAFB, Dark=#0F172A}"
+                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                           PlaceholderColor="{AppThemeBinding Light=#9CA3AF, Dark=#64748B}" />
+
+                    <Button Text="Save Price"
+                            Clicked="SavePrice_Clicked"
+                            BackgroundColor="#2563EB"
+                            TextColor="White"
+                            CornerRadius="12"
+                            HeightRequest="48" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <Frame CornerRadius="18"
+                   Padding="16"
+                   HasShadow="False"
+                   BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
+                   BorderColor="{AppThemeBinding Light=#E5E7EB, Dark=#334155}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Add New Slot"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+
+                    <Label Text="Create a new parking slot"
+                           FontSize="13"
+                           TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+
+                    <Entry x:Name="NewSlotCodeEntry"
+                           Placeholder="Enter slot code (e.g. A-01)"
+                           BackgroundColor="{AppThemeBinding Light=#F9FAFB, Dark=#0F172A}"
+                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                           PlaceholderColor="{AppThemeBinding Light=#9CA3AF, Dark=#64748B}" />
+
+                    <Button Text="Add Slot"
+                            Clicked="AddSlot_Clicked"
+                            BackgroundColor="#16A34A"
+                            TextColor="White"
+                            CornerRadius="12"
+                            HeightRequest="48" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <Label Text="Manage Slots"
+                   FontSize="18"
+                   FontAttributes="Bold"
+                   TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+
+            <CollectionView x:Name="SlotsCollectionView"
+                            SelectionMode="None">
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout Padding="24" Spacing="6">
+                        <Label Text="No slots found"
+                               HorizontalOptions="Center"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+                        <Label Text="Your slot list will appear here."
+                               HorizontalOptions="Center"
+                               TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Frame Margin="0,0,0,12"
+                               Padding="14"
+                               CornerRadius="16"
+                               HasShadow="False"
+                               BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
+                               BorderColor="{AppThemeBinding Light=#E5E7EB, Dark=#334155}">
+                            <VerticalStackLayout Spacing="10">
+
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <VerticalStackLayout Spacing="2">
+                                        <Label Text="{Binding SlotCode}"
+                                               FontSize="18"
+                                               FontAttributes="Bold"
+                                               TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+                                        <Label Text="{Binding StatusText}"
+                                               FontSize="13"
+                                               TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+                                    </VerticalStackLayout>
+
+                                    <Frame Grid.Column="1"
+                                           Padding="10,5"
+                                           CornerRadius="10"
+                                           HasShadow="False"
+                                           BackgroundColor="{Binding StatusBadgeColor}">
+                                        <Label Text="{Binding Status}"
+                                               FontSize="12"
+                                               FontAttributes="Bold"
+                                               TextColor="White" />
+                                    </Frame>
+                                </Grid>
+
+                                <Entry Text="{Binding EditableSlotCode}"
+                                       Placeholder="Rename slot"
+                                       BackgroundColor="{AppThemeBinding Light=#F9FAFB, Dark=#0F172A}"
+                                       TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                                       PlaceholderColor="{AppThemeBinding Light=#9CA3AF, Dark=#64748B}" />
+
+                                <Grid ColumnDefinitions="*,*"
+                                      ColumnSpacing="10">
+                                    <Button Grid.Column="0"
+                                            Text="Save Name"
+                                            Clicked="SaveSlotName_Clicked"
+                                            CommandParameter="{Binding .}"
+                                            BackgroundColor="#0F766E"
+                                            TextColor="White"
+                                            CornerRadius="12"
+                                            HeightRequest="44" />
+
+                                    <Button Grid.Column="1"
+                                            Text="{Binding ToggleButtonText}"
+                                            Clicked="ToggleSlotActive_Clicked"
+                                            CommandParameter="{Binding .}"
+                                            BackgroundColor="{Binding ToggleButtonColor}"
+                                            TextColor="White"
+                                            CornerRadius="12"
+                                            HeightRequest="44" />
+                                </Grid>
+                            </VerticalStackLayout>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

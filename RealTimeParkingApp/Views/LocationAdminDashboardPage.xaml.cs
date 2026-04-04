@@ -100,8 +100,8 @@ public partial class LocationAdminDashboardPage : ContentPage
         await Navigation.PushAsync(new LocationAdminSlotsPage());
     }
 
-    //private async void ManualArrivalCheck_Clicked(object sender, EventArgs e)
-    //{
-    //    await Shell.Current.GoToAsync(nameof(AdminQrScannerPage) + "?mode=arrival");
-    //}   
+    private async void OpenMaintenance_Clicked(object sender, EventArgs e)
+    {
+        await Navigation.PushAsync(new LocationAdminMaintenancePage());
+    }
 }
