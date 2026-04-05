@@ -706,7 +706,7 @@ namespace RealTimeParkingApp.Services
             {
                 RestoreTokenFromPreferences();
 
-                var response = await _httpClient.GetAsync("user/my-history");
+                var response = await _httpClient.GetAsync("reservations/my-history");
                 var json = await response.Content.ReadAsStringAsync();
 
                 System.Diagnostics.Debug.WriteLine($"GetParkingHistoryAsync status: {response.StatusCode}");
@@ -755,7 +755,7 @@ namespace RealTimeParkingApp.Services
             {
                 RestoreTokenFromPreferences();
 
-                var response = await _httpClient.GetAsync("user/location-transactions");
+                var response = await _httpClient.GetAsync("reservations/my-location-reservations");
                 var json = await response.Content.ReadAsStringAsync();
 
                 System.Diagnostics.Debug.WriteLine($"GetLocationTransactionHistoryAsync status: {response.StatusCode}");

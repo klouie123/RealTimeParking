@@ -4,6 +4,7 @@
              x:Class="RealTimeParkingApp.Views.MyActiveParkingPage"
              Title="My Active Parking"
              Shell.TabBarIsVisible="False"
+             Shell.NavBarIsVisible="False"
              BackgroundColor="{AppThemeBinding Light=#F8F9FB, Dark=#0F172A}">
 
     <ScrollView>
@@ -26,10 +27,12 @@
                     <Label x:Name="ReferenceLabel" FontSize="14" />
                     <Label x:Name="PaymentLabel" FontSize="14" />
                     <Label x:Name="PaymentMethodLabel" FontSize="14" />
+                    <Label x:Name="AmountLabel" FontSize="14" />
                 </VerticalStackLayout>
             </Frame>
 
-            <Frame CornerRadius="16"
+            <Frame x:Name="QrFrame"
+                   CornerRadius="16"
                    Padding="16"
                    BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
                    BorderColor="{AppThemeBinding Light=#E5E7EB, Dark=#334155}"
@@ -61,6 +64,18 @@
                 </VerticalStackLayout>
             </Frame>
 
+            <Frame x:Name="InfoFrame"
+                   IsVisible="False"
+                   CornerRadius="16"
+                   Padding="16"
+                   BackgroundColor="{AppThemeBinding Light=#FFF7ED, Dark=#3F2A14}"
+                   BorderColor="{AppThemeBinding Light=#FDBA74, Dark=#9A3412}"
+                   HasShadow="False">
+                <Label x:Name="InfoLabel"
+                       FontSize="14"
+                       TextColor="{AppThemeBinding Light=#9A3412, Dark=#FED7AA}" />
+            </Frame>
+
             <Button x:Name="NavigateButton"
                     Text="Navigate"
                     Clicked="Navigate_Clicked"
@@ -69,29 +84,11 @@
                     CornerRadius="12"
                     HeightRequest="48" />
 
-            <Button x:Name="CashButton"
-                    Text="Continue with Cash"
-                    Clicked="CashButton_Clicked"
+            <Button x:Name="ShowArrivalQrButton"
+                    Text="Show Arrival QR"
+                    Clicked="ShowArrivalQr_Clicked"
                     IsVisible="False"
-                    BackgroundColor="#D97706"
-                    TextColor="White"
-                    CornerRadius="12"
-                    HeightRequest="48" />
-
-            <Button x:Name="GeneratePaymentQrButton"
-                    Text="Generate GCash Payment QR"
-                    Clicked="GeneratePaymentQr_Clicked"
-                    IsVisible="False"
-                    BackgroundColor="#7C3AED"
-                    TextColor="White"
-                    CornerRadius="12"
-                    HeightRequest="48" />
-
-            <Button x:Name="OpenPaymentButton"
-                    Text="Open Payment"
-                    Clicked="OpenPayment_Clicked"
-                    IsVisible="False"
-                    BackgroundColor="#059669"
+                    BackgroundColor="#0F766E"
                     TextColor="White"
                     CornerRadius="12"
                     HeightRequest="48" />

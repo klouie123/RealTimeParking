@@ -1,7 +1,6 @@
-using RealTimeParkingApp.DTOs;
+using System.Globalization;
 using RealTimeParkingApp.Models;
 using RealTimeParkingApp.Services;
-using System.Globalization;
 using ZXing;
 using ZXing.Common;
 
@@ -13,8 +12,6 @@ public partial class MyActiveParkingPage : ContentPage
     private readonly NavigationStateService _navigationState;
 
     private ActiveParkingModel? _activeParking;
-    private PaymentRequestDto? _paymentRequest;
-
     private CancellationTokenSource? _refreshCts;
     private bool _isBusy;
     private bool _noActiveParkingHandled;
@@ -29,20 +26,18 @@ public partial class MyActiveParkingPage : ContentPage
         _navigationState = App.Services.GetRequiredService<NavigationStateService>();
     }
 
-    protected override async void OnAppearing()
+    protected override void OnAppearing()
     {
         base.OnAppearing();
-
         _noActiveParkingHandled = false;
 
         try
         {
-            await LoadAsync();
             StartAutoRefresh();
+            _ = LoadAsync();
         }
-        catch (Exception ex)
+        catch
         {
-            await DisplayAlert("Error", ex.Message, "OK");
         }
     }
 
@@ -106,7 +101,6 @@ public partial class MyActiveParkingPage : ContentPage
                 {
                     _noActiveParkingHandled = true;
                     StopAutoRefresh();
-
                     await DisplayAlert("Info", "No active parking found.", "OK");
 
                     if (Shell.Current != null)
@@ -131,21 +125,33 @@ public partial class MyActiveParkingPage : ContentPage
 
             bool hasArrived = ResolveHasArrived(_activeParking);
             string paymentMethod = ResolvePaymentMethod(_activeParking);
+            string status = _activeParking.Status?.Trim() ?? string.Empty;
+            string paymentStatus = _activeParking.PaymentStatus?.Trim() ?? string.Empty;
 
-            if (_activeParking.Status.Equals("Reserved", StringComparison.OrdinalIgnoreCase))
+            if (status.Equals("Reserved", StringComparison.OrdinalIgnoreCase))
             {
                 if (!hasArrived)
-                {
                     ApplyBeforeArrivalState(_activeParking);
-                }
                 else
-                {
-                    ApplyArrivedState(_activeParking, paymentMethod);
-                }
+                    ApplyArrivalQrState(_activeParking);
             }
-            else if (_activeParking.Status.Equals("Occupied", StringComparison.OrdinalIgnoreCase))
+            else if (status.Equals("Occupied", StringComparison.OrdinalIgnoreCase))
             {
-                await ApplyOccupiedStateAsync(_activeParking, paymentMethod);
+                ApplyOccupiedState(paymentMethod);
+            }
+            else if (status.Equals("PendingCashConfirmation", StringComparison.OrdinalIgnoreCase) ||
+                     status.Equals("PendingGcashConfirmation", StringComparison.OrdinalIgnoreCase) ||
+                     paymentStatus.Equals("Pending", StringComparison.OrdinalIgnoreCase))
+            {
+                ApplyWaitingState(paymentMethod);
+            }
+            else if (status.Equals("Paid", StringComparison.OrdinalIgnoreCase) ||
+                     status.Equals("Completed", StringComparison.OrdinalIgnoreCase) ||
+                     paymentStatus.Equals("Paid", StringComparison.OrdinalIgnoreCase))
+            {
+                StopAutoRefresh();
+                await Shell.Current.GoToAsync(
+                    $"{nameof(ReservationSuccessPage)}?reservationId={_activeParking.ReservationId}");
             }
             else
             {
@@ -159,6 +165,18 @@ public partial class MyActiveParkingPage : ContentPage
         }
     }
 
+    private void ApplyArrivalQrState(ActiveParkingModel parking)
+    {
+        QrFrame.IsVisible = false;
+        InfoFrame.IsVisible = true;
+
+        InfoLabel.Text = "You have arrived. Tap the button below to show your arrival QR to the location admin.";
+
+        NavigateButton.IsVisible = false;
+        ShowArrivalQrButton.IsVisible = !string.IsNullOrWhiteSpace(parking.ReservationReference);
+        DoneParkingButton.IsVisible = false;
+    }
+
     private void ApplyHeaderState(ActiveParkingModel parking)
     {
         string paymentMethod = ResolvePaymentMethod(parking);
@@ -169,103 +187,63 @@ public partial class MyActiveParkingPage : ContentPage
         ReferenceLabel.Text = $"Reservation Ref: {parking.ReservationReference}";
         PaymentLabel.Text = $"Payment Ref: {parking.PaymentReference ?? "Not ready"}";
         PaymentMethodLabel.Text = $"Payment Method: {paymentMethod}";
+        AmountLabel.Text = $"Amount: ₱{parking.PaymentAmount:F2}";
 
-        NavigateButton.IsVisible = false;
-        CashButton.IsVisible = false;
-        GeneratePaymentQrButton.IsVisible = false;
-        OpenPaymentButton.IsVisible = false;
-        DoneParkingButton.IsVisible = false;
-        GenerateQrButton.IsVisible = false;
+        HideAllActionButtons();
+        QrFrame.IsVisible = false;
+        InfoFrame.IsVisible = false;
     }
 
     private void ApplyBeforeArrivalState(ActiveParkingModel parking)
     {
-        QrSectionTitleLabel.Text = "Arrival QR";
-        QrTextLabel.Text = "Arrival QR will appear once you reach the destination.";
-        QrImage.Source = null;
+        QrFrame.IsVisible = false;
+        InfoFrame.IsVisible = true;
+        InfoLabel.Text = "You have an active reservation. Tap Navigate to go to the parking location.";
 
+        HideAllActionButtons();
         NavigateButton.IsVisible = parking.Latitude != 0 && parking.Longitude != 0;
-        GenerateQrButton.IsVisible = false;
     }
 
-    private void ApplyArrivedState(ActiveParkingModel parking, string paymentMethod)
+    private void ApplyOccupiedState(string paymentMethod)
+    {
+        QrFrame.IsVisible = false;
+        InfoFrame.IsVisible = true;
+
+        InfoLabel.Text = paymentMethod.Equals("Cash", StringComparison.OrdinalIgnoreCase)
+            ? "Arrival confirmed. Tap Done Parking when ready to wait for cash payment confirmation."
+            : "Arrival confirmed. Tap Done Parking to open GCash payment and then wait for admin confirmation.";
+
+        HideAllActionButtons();
+        DoneParkingButton.IsVisible = true;
+    }
+
+    private void ApplyWaitingState(string paymentMethod)
+    {
+        QrFrame.IsVisible = false;
+        InfoFrame.IsVisible = true;
+
+        InfoLabel.Text = paymentMethod.Equals("Cash", StringComparison.OrdinalIgnoreCase)
+            ? "Waiting for cash payment confirmation from the location admin..."
+            : "Waiting for GCash payment confirmation from the location admin...";
+
+        HideAllActionButtons();
+    }
+
+    private void ApplyDefaultState(ActiveParkingModel parking)
     {
         string qrValue = parking.ReservationReference ?? string.Empty;
 
-        QrSectionTitleLabel.Text = "Arrival QR";
-        QrTextLabel.Text = string.IsNullOrWhiteSpace(qrValue)
-            ? "Arrival QR is not available."
-            : qrValue;
-
+        QrSectionTitleLabel.Text = "QR Code";
+        QrTextLabel.Text = string.IsNullOrWhiteSpace(qrValue) ? "No QR available" : qrValue;
         QrImage.Source = string.IsNullOrWhiteSpace(qrValue)
             ? null
             : GenerateQr(qrValue);
 
         GenerateQrButton.IsVisible = !string.IsNullOrWhiteSpace(qrValue);
-
-        CashButton.IsVisible = paymentMethod.Equals("Cash", StringComparison.OrdinalIgnoreCase);
-        GeneratePaymentQrButton.IsVisible = paymentMethod.Equals("GCash", StringComparison.OrdinalIgnoreCase);
-
-        OpenPaymentButton.IsVisible = false;
+        NavigateButton.IsVisible = false;
         DoneParkingButton.IsVisible = false;
-        NavigateButton.IsVisible = false;
-    }
-
-    private async Task ApplyOccupiedStateAsync(ActiveParkingModel parking, string paymentMethod)
-    {
-        var qrValue = parking.PaymentReference ?? string.Empty;
-
-        if (!string.IsNullOrWhiteSpace(qrValue) &&
-            (_paymentRequest == null || _paymentRequest.PaymentReference != qrValue))
-        {
-            _paymentRequest = await _apiService.GetPaymentRequestByReservationAsync(parking.ReservationId);
-        }
-
-        if (paymentMethod.Equals("GCash", StringComparison.OrdinalIgnoreCase))
-        {
-            QrSectionTitleLabel.Text = "Payment QR";
-            QrTextLabel.Text = string.IsNullOrWhiteSpace(qrValue)
-                ? "Payment QR not ready."
-                : qrValue;
-
-            QrImage.Source = string.IsNullOrWhiteSpace(qrValue)
-                ? null
-                : GenerateQr(qrValue);
-
-            GenerateQrButton.IsVisible = !string.IsNullOrWhiteSpace(qrValue);
-            OpenPaymentButton.IsVisible =
-                !string.IsNullOrWhiteSpace(qrValue) &&
-                _paymentRequest != null &&
-                !string.IsNullOrWhiteSpace(_paymentRequest.ExternalPaymentUrl);
-
-            DoneParkingButton.IsVisible = true;
-        }
-        else
-        {
-            QrSectionTitleLabel.Text = "Cash Payment";
-            QrTextLabel.Text = "Please proceed to the location admin for cash payment and checkout.";
-            QrImage.Source = null;
-            GenerateQrButton.IsVisible = false;
-            OpenPaymentButton.IsVisible = false;
-            DoneParkingButton.IsVisible = false;
-        }
-
-        NavigateButton.IsVisible = false;
-        CashButton.IsVisible = false;
-        GeneratePaymentQrButton.IsVisible = false;
-
-        _navigationState.Clear();
-    }
-
-    private void ApplyDefaultState(ActiveParkingModel parking)
-    {
-        QrSectionTitleLabel.Text = "QR Code";
-        QrTextLabel.Text = parking.ReservationReference ?? "No QR available";
-        QrImage.Source = string.IsNullOrWhiteSpace(parking.ReservationReference)
-            ? null
-            : GenerateQr(parking.ReservationReference);
-
-        GenerateQrButton.IsVisible = !string.IsNullOrWhiteSpace(parking.ReservationReference);
+        QrFrame.IsVisible = true;
+        InfoFrame.IsVisible = false;
     }
 
     private async void Navigate_Clicked(object sender, EventArgs e)
@@ -309,93 +287,6 @@ public partial class MyActiveParkingPage : ContentPage
         }
     }
 
-    private async void CashButton_Clicked(object sender, EventArgs e)
-    {
-        try
-        {
-            if (_activeParking == null)
-                return;
-
-            _isBusy = true;
-            CashButton.IsEnabled = false;
-
-            var result = await _apiService.DoneParkingAsync(_activeParking.ReservationId);
-
-            if (result?.Success != true)
-            {
-                await DisplayAlert("Error", result?.Message ?? "Failed to continue cash payment flow.", "OK");
-                return;
-            }
-
-            _activeParking.Status = "Occupied";
-            _activeParking.PaymentMethod = "Cash";
-            _activeParking.PaymentStatus = "Unpaid";
-            _activeParking.PaymentReference = null;
-
-            SavePaymentMethod(_activeParking.ReservationId, "Cash");
-
-            await ApplyOccupiedStateAsync(_activeParking, "Cash");
-
-            await DisplayAlert("Success", "Cash payment selected. Please proceed to the location admin for checkout.", "OK");
-        }
-        catch (Exception ex)
-        {
-            await DisplayAlert("Error", ex.Message, "OK");
-        }
-        finally
-        {
-            CashButton.IsEnabled = true;
-            _isBusy = false;
-        }
-    }
-
-    private async void GeneratePaymentQr_Clicked(object sender, EventArgs e)
-    {
-        try
-        {
-            if (_activeParking == null)
-                return;
-
-            _isBusy = true;
-            GeneratePaymentQrButton.IsEnabled = false;
-
-            var payment = await _apiService.CreatePaymentRequestAsync(_activeParking.ReservationId);
-
-            if (payment == null)
-            {
-                await DisplayAlert("Error", "Failed to create payment request.", "OK");
-                return;
-            }
-
-            _paymentRequest = payment;
-
-            _activeParking.Status = "Occupied";
-            _activeParking.PaymentMethod = "GCash";
-            _activeParking.PaymentReference = payment.PaymentReference;
-            _activeParking.PaymentStatus = "Pending";
-
-            SavePaymentMethod(_activeParking.ReservationId, "GCash");
-
-            PaymentLabel.Text = $"Payment Ref: {payment.PaymentReference}";
-
-            await ApplyOccupiedStateAsync(_activeParking, "GCash");
-
-            await DisplayAlert(
-                "Payment Request Created",
-                $"Amount: ₱{payment.Amount:F2}\nReceiver: {payment.MerchantDisplayName}\nGCash No: {payment.MerchantGcashNumber}\nRef: {payment.PaymentReference}",
-                "OK");
-        }
-        catch (Exception ex)
-        {
-            await DisplayAlert("Error", ex.Message, "OK");
-        }
-        finally
-        {
-            GeneratePaymentQrButton.IsEnabled = true;
-            _isBusy = false;
-        }
-    }
-
     private async void DoneParking_Clicked(object sender, EventArgs e)
     {
         try
@@ -403,25 +294,38 @@ public partial class MyActiveParkingPage : ContentPage
             if (_activeParking == null)
                 return;
 
+            bool confirm = await DisplayAlert(
+                "Done Parking",
+                "Are you sure you want to proceed?",
+                "Yes",
+                "No");
+
+            if (!confirm)
+                return;
+
             _isBusy = true;
             DoneParkingButton.IsEnabled = false;
+
+            string paymentMethod = ResolvePaymentMethod(_activeParking);
 
             var result = await _apiService.DoneParkingAsync(_activeParking.ReservationId);
 
             if (result?.Success != true)
             {
-                await DisplayAlert("Error", result?.Message ?? "Failed to update parking.", "OK");
+                await DisplayAlert("Error", result?.Message ?? "Failed to continue checkout.", "OK");
                 return;
             }
 
-            await DisplayAlert("Success", result.Message ?? "Parking updated.", "OK");
-
-            await LoadAsync(false);
-
-            if (_activeParking == null)
+            if (paymentMethod.Equals("GCash", StringComparison.OrdinalIgnoreCase))
             {
-                await Shell.Current.GoToAsync("//UserDashboardPage");
+                var payment = await _apiService.CreatePaymentRequestAsync(_activeParking.ReservationId);
+
+                if (payment != null && !string.IsNullOrWhiteSpace(payment.ExternalPaymentUrl))
+                    await Launcher.Default.OpenAsync(payment.ExternalPaymentUrl);
             }
+
+            await Shell.Current.GoToAsync(
+                $"{nameof(WaitingPaymentConfirmationPage)}?reservationId={_activeParking.ReservationId}");
         }
         catch (Exception ex)
         {
@@ -431,24 +335,6 @@ public partial class MyActiveParkingPage : ContentPage
         {
             DoneParkingButton.IsEnabled = true;
             _isBusy = false;
-        }
-    }
-
-    private async void OpenPayment_Clicked(object sender, EventArgs e)
-    {
-        try
-        {
-            if (_paymentRequest == null || string.IsNullOrWhiteSpace(_paymentRequest.ExternalPaymentUrl))
-            {
-                await DisplayAlert("Info", "No payment URL is available.", "OK");
-                return;
-            }
-
-            await Launcher.Default.OpenAsync(_paymentRequest.ExternalPaymentUrl);
-        }
-        catch (Exception ex)
-        {
-            await DisplayAlert("Error", ex.Message, "OK");
         }
     }
 
@@ -462,7 +348,7 @@ public partial class MyActiveParkingPage : ContentPage
                 return;
             }
 
-            string qrValue = ResolveCurrentQrValue();
+            string qrValue = _activeParking.ReservationReference ?? string.Empty;
 
             if (string.IsNullOrWhiteSpace(qrValue))
             {
@@ -479,28 +365,6 @@ public partial class MyActiveParkingPage : ContentPage
         }
     }
 
-    private string ResolveCurrentQrValue()
-    {
-        if (_activeParking == null)
-            return string.Empty;
-
-        string paymentMethod = ResolvePaymentMethod(_activeParking);
-        bool hasArrived = ResolveHasArrived(_activeParking);
-
-        if (_activeParking.Status.Equals("Occupied", StringComparison.OrdinalIgnoreCase) &&
-            paymentMethod.Equals("GCash", StringComparison.OrdinalIgnoreCase))
-        {
-            return _activeParking.PaymentReference ?? _paymentRequest?.PaymentReference ?? string.Empty;
-        }
-
-        if (_activeParking.Status.Equals("Reserved", StringComparison.OrdinalIgnoreCase) && hasArrived)
-        {
-            return _activeParking.ReservationReference ?? string.Empty;
-        }
-
-        return string.Empty;
-    }
-
     private void ResetUi()
     {
         LocationLabel.Text = string.Empty;
@@ -509,23 +373,14 @@ public partial class MyActiveParkingPage : ContentPage
         ReferenceLabel.Text = string.Empty;
         PaymentLabel.Text = string.Empty;
         PaymentMethodLabel.Text = string.Empty;
+        AmountLabel.Text = string.Empty;
 
-        QrSectionTitleLabel.Text = "QR Code";
-        QrTextLabel.Text = string.Empty;
-        QrImage.Source = null;
+        InfoLabel.Text = string.Empty;
 
-        NavigateButton.IsVisible = false;
-        CashButton.IsVisible = false;
-        GeneratePaymentQrButton.IsVisible = false;
-        OpenPaymentButton.IsVisible = false;
-        DoneParkingButton.IsVisible = false;
-        GenerateQrButton.IsVisible = false;
+        HideAllActionButtons();
+        QrFrame.IsVisible = false;
+        InfoFrame.IsVisible = false;
 
-        GeneratePaymentQrButton.IsEnabled = true;
-        CashButton.IsEnabled = true;
-        DoneParkingButton.IsEnabled = true;
-
-        _paymentRequest = null;
         _activeParking = null;
     }
 
@@ -596,8 +451,39 @@ public partial class MyActiveParkingPage : ContentPage
 
             data.SaveTo(stream);
             stream.Seek(0, SeekOrigin.Begin);
-
             return stream;
         });
+    }
+
+    private async void ShowArrivalQr_Clicked(object sender, EventArgs e)
+    {
+        try
+        {
+            if (_activeParking == null)
+                return;
+
+            string qrValue = _activeParking.ReservationReference ?? string.Empty;
+
+            if (string.IsNullOrWhiteSpace(qrValue))
+            {
+                await DisplayAlert("Info", "No arrival QR available.", "OK");
+                return;
+            }
+
+            StopAutoRefresh();
+
+            await Navigation.PushModalAsync(new ArrivalQrPopupPage(qrValue));
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Error", ex.Message, "OK");
+        }
+    }
+
+    private void HideAllActionButtons()
+    {
+        NavigateButton.IsVisible = false;
+        ShowArrivalQrButton.IsVisible = false;
+        DoneParkingButton.IsVisible = false;
     }
 }

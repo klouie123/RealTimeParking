@@ -94,10 +94,18 @@ namespace RealTimeParkingAPI.Controllers
             if (!int.TryParse(userIdClaim, out int userId))
                 return Unauthorized();
 
+            var activeStatuses = new[]
+            {
+        "Reserved",
+        "Occupied",
+        "PendingCashConfirmation",
+        "PendingGcashConfirmation"
+    };
+
             var reservation = await _context.ParkingReservations
                 .Include(r => r.ParkingSlot)
                     .ThenInclude(s => s!.ParkingLocation)
-                .Where(r => r.UserId == userId && (r.Status == "Reserved" || r.Status == "Occupied"))
+                .Where(r => r.UserId == userId && activeStatuses.Contains(r.Status))
                 .OrderByDescending(r => r.ReservedAt)
                 .FirstOrDefaultAsync();
 
@@ -125,7 +133,6 @@ namespace RealTimeParkingAPI.Controllers
                 HasArrived = reservation.HasArrived,
                 CanGenerateArrivalQr = reservation.HasArrived && reservation.Status == "Reserved",
                 CanGeneratePaymentQr =
-                    reservation.HasArrived &&
                     reservation.Status == "Occupied" &&
                     string.Equals(reservation.PaymentMethod, "GCash", StringComparison.OrdinalIgnoreCase)
             };
@@ -232,6 +239,15 @@ namespace RealTimeParkingAPI.Controllers
             if (reservation == null || reservation.ParkingSlot == null)
                 return NotFound(new { message = "Reservation not found." });
 
+            if (reservation.Status != "Occupied")
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Only occupied reservations can proceed to done parking."
+                });
+            }
+
             var paymentMethod = string.IsNullOrWhiteSpace(reservation.PaymentMethod)
                 ? "Cash"
                 : reservation.PaymentMethod.Trim();
@@ -240,7 +256,7 @@ namespace RealTimeParkingAPI.Controllers
 
             if (paymentMethod.Equals("Cash", StringComparison.OrdinalIgnoreCase))
             {
-                reservation.Status = "Occupied";
+                reservation.Status = "PendingCashConfirmation";
                 reservation.PaymentStatus = "Unpaid";
 
                 await _context.SaveChangesAsync();
@@ -248,7 +264,7 @@ namespace RealTimeParkingAPI.Controllers
                 return Ok(new
                 {
                     success = true,
-                    message = "Cash payment flow continued successfully.",
+                    message = "Waiting for cash confirmation.",
                     reservation.Id,
                     reservation.Status,
                     reservation.PaymentStatus,
@@ -265,7 +281,7 @@ namespace RealTimeParkingAPI.Controllers
                 });
             }
 
-            reservation.Status = "Occupied";
+            reservation.Status = "PendingGcashConfirmation";
             reservation.PaymentStatus = "Pending";
 
             await _context.SaveChangesAsync();
@@ -273,7 +289,7 @@ namespace RealTimeParkingAPI.Controllers
             return Ok(new
             {
                 success = true,
-                message = "Parking moved to occupied state.",
+                message = "Waiting for GCash confirmation.",
                 reservation.Id,
                 reservation.Status,
                 reservation.PaymentStatus,
@@ -299,14 +315,16 @@ namespace RealTimeParkingAPI.Controllers
             }
 
             var reservation = await _context.ParkingReservations
-                .FirstOrDefaultAsync(r => r.ParkingSlotId == slotId && r.Status == "Occupied");
+                .FirstOrDefaultAsync(r =>
+                    r.ParkingSlotId == slotId &&
+                    (r.Status == "Occupied" || r.Status == "PendingCashConfirmation"));
 
             if (reservation == null)
             {
                 return BadRequest(new
                 {
                     success = false,
-                    message = "No occupied reservation found for this slot."
+                    message = "No cash reservation found for this slot."
                 });
             }
 
@@ -388,10 +406,17 @@ namespace RealTimeParkingAPI.Controllers
             if (slot == null)
                 return NotFound(new { message = "Slot not found." });
 
+            var activeStatuses = new[]
+            {
+        "Reserved",
+        "Occupied",
+        "PendingCashConfirmation",
+        "PendingGcashConfirmation"
+        };
+
             var reservation = await _context.ParkingReservations
                 .Include(r => r.User)
-                .Where(r => r.ParkingSlotId == slotId &&
-                            (r.Status == "Reserved" || r.Status == "Occupied"))
+                .Where(r => r.ParkingSlotId == slotId && activeStatuses.Contains(r.Status))
                 .OrderByDescending(r => r.ReservedAt)
                 .FirstOrDefaultAsync();
 
@@ -421,15 +446,33 @@ namespace RealTimeParkingAPI.Controllers
                 .FirstOrDefaultAsync(r => r.ParkingSlotId == dto.ParkingSlotId && r.Status == "Reserved");
 
             if (reservation == null || reservation.ParkingSlot == null)
-                return NotFound(new { message = "No reserved parking found for this slot." });
+                return NotFound(new { success = false, message = "No reserved parking found for this slot." });
 
             reservation.HasArrived = true;
             reservation.ArrivedAt = DateTime.UtcNow;
             reservation.CheckInAt = DateTime.UtcNow;
+            reservation.Status = "Occupied";
+            reservation.ParkingSlot.Status = "Occupied";
+
+            if (string.IsNullOrWhiteSpace(reservation.PaymentMethod))
+                reservation.PaymentMethod = "Cash";
+
+            if (reservation.PaymentMethod.Equals("Cash", StringComparison.OrdinalIgnoreCase))
+                reservation.PaymentStatus = "Unpaid";
+            else
+                reservation.PaymentStatus = "Pending";
 
             await _context.SaveChangesAsync();
 
-            return Ok(new { success = true, message = "Arrival confirmed successfully." });
+            return Ok(new
+            {
+                success = true,
+                message = "Arrival confirmed successfully.",
+                reservationId = reservation.Id,
+                status = reservation.Status,
+                slotStatus = reservation.ParkingSlot.Status,
+                checkInAt = reservation.CheckInAt
+            });
         }
 
         [HttpPost("admin/manual-checkout")]
@@ -438,17 +481,16 @@ namespace RealTimeParkingAPI.Controllers
         {
             var reservation = await _context.ParkingReservations
                 .Include(r => r.ParkingSlot)
-                .FirstOrDefaultAsync(r => r.ParkingSlotId == dto.ParkingSlotId && r.Status == "Occupied");
+                .FirstOrDefaultAsync(r =>
+                    r.ParkingSlotId == dto.ParkingSlotId &&
+                    (r.Status == "Occupied" || r.Status == "PendingGcashConfirmation"));
 
             if (reservation == null || reservation.ParkingSlot == null)
-                return NotFound(new { message = "No occupied parking found for this slot." });
+                return NotFound(new { success = false, message = "No active parking found for this slot." });
 
             reservation.CheckOutAt = DateTime.UtcNow;
             reservation.Status = "Completed";
-
-            if (string.IsNullOrWhiteSpace(reservation.PaymentStatus))
-                reservation.PaymentStatus = "Paid";
-
+            reservation.PaymentStatus = "Paid";
             reservation.PaidAt ??= DateTime.UtcNow;
             reservation.ParkingSlot.Status = "Available";
 
@@ -485,15 +527,33 @@ namespace RealTimeParkingAPI.Controllers
                     r.Status == "Reserved");
 
             if (reservation == null || reservation.ParkingSlot == null)
-                return NotFound(new { message = "Reservation reference not found." });
+                return NotFound(new { success = false, message = "Reservation reference not found." });
 
             reservation.HasArrived = true;
             reservation.ArrivedAt = DateTime.UtcNow;
             reservation.CheckInAt = DateTime.UtcNow;
+            reservation.Status = "Occupied";
+            reservation.ParkingSlot.Status = "Occupied";
+
+            if (string.IsNullOrWhiteSpace(reservation.PaymentMethod))
+                reservation.PaymentMethod = "Cash";
+
+            if (reservation.PaymentMethod.Equals("Cash", StringComparison.OrdinalIgnoreCase))
+                reservation.PaymentStatus = "Unpaid";
+            else
+                reservation.PaymentStatus = "Pending";
 
             await _context.SaveChangesAsync();
 
-            return Ok(new { success = true, message = "Arrival QR scanned successfully." });
+            return Ok(new
+            {
+                success = true,
+                message = "Arrival QR scanned successfully.",
+                reservationId = reservation.Id,
+                status = reservation.Status,
+                slotStatus = reservation.ParkingSlot.Status,
+                checkInAt = reservation.CheckInAt
+            });
         }
 
         [HttpPost("admin/scan-payment")]
@@ -504,10 +564,10 @@ namespace RealTimeParkingAPI.Controllers
                 .Include(r => r.ParkingSlot)
                 .FirstOrDefaultAsync(r =>
                     r.PaymentReference == dto.Reference &&
-                    r.Status == "Occupied");
+                    (r.Status == "Occupied" || r.Status == "PendingGcashConfirmation"));
 
             if (reservation == null || reservation.ParkingSlot == null)
-                return NotFound(new { message = "Payment reference not found." });
+                return NotFound(new { success = false, message = "Payment reference not found." });
 
             reservation.PaymentStatus = "Paid";
             reservation.PaidAt = DateTime.UtcNow;
@@ -535,6 +595,40 @@ namespace RealTimeParkingAPI.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new { success = true, message = "Payment QR scanned successfully." });
+        }
+
+        [HttpGet("my-history")]
+        [Authorize(Roles = "User")]
+        public async Task<IActionResult> GetMyHistory()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out int userId))
+                return Unauthorized();
+
+            var history = await _context.ParkingHistories
+                .Include(h => h.ParkingSlot)
+                .Include(h => h.ParkingLocation)
+                .Where(h => h.UserId == userId)
+                .OrderByDescending(h => h.CheckOutAt ?? h.ReservedAt)
+                .Select(h => new
+                {
+                    h.Id,
+                    h.ReservationReference,
+                    h.PaymentReference,
+                    ParkingLocationName = h.ParkingLocation != null ? h.ParkingLocation.Name : "Unknown",
+                    SlotCode = h.ParkingSlot != null ? h.ParkingSlot.SlotCode : "N/A",
+                    h.ReservedAt,
+                    h.CheckInAt,
+                    h.CheckOutAt,
+                    h.PaidAt,
+                    h.PaymentAmount,
+                    h.PaymentMethod,
+                    h.PaymentStatus,
+                    h.Status
+                })
+                .ToListAsync();
+
+            return Ok(history);
         }
 
         private string GenerateReservationReference()

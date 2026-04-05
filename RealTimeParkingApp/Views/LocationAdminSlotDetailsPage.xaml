@@ -9,43 +9,136 @@
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="16">
 
-            <Label x:Name="SlotCodeLabel" FontSize="24" FontAttributes="Bold" />
-            <Label x:Name="SlotStatusLabel" FontSize="14" />
-            <Label x:Name="ReservedUserLabel" FontSize="14" />
-            <Label x:Name="ReservedAtLabel" FontSize="14" />
-            <Label x:Name="CheckInAtLabel" FontSize="14" />
-            <Label x:Name="ReservationReferenceLabel" FontSize="14" />
-            <Label x:Name="PaymentReferenceLabel" FontSize="14" />
+            <VerticalStackLayout Spacing="4">
+                <Label x:Name="SlotCodeLabel"
+                       FontSize="26"
+                       FontAttributes="Bold"
+                       TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
 
-            <Button x:Name="ConfirmArrivalButton"
-                    Text="Confirm Arrival"
-                    Clicked="ManualArrive_Clicked"
-                    BackgroundColor="#2563EB"
-                    TextColor="White" />
+                <Label Text="Manage arrival, payment, and checkout actions for this slot."
+                       FontSize="13"
+                       TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+            </VerticalStackLayout>
 
-            <Button x:Name="CashCheckoutButton"
-                    Text="Cash Payment + Check Out"
-                    Clicked="CashCheckout_Clicked"
-                    BackgroundColor="#16A34A"
-                    TextColor="White" />
+            <Frame CornerRadius="18"
+                   Padding="16"
+                   HasShadow="False"
+                   BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
+                   BorderColor="{AppThemeBinding Light=#E5E7EB, Dark=#334155}">
+                <VerticalStackLayout Spacing="8">
+                    <Label x:Name="SlotStatusLabel"
+                           FontSize="14"
+                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+                    <Label x:Name="ReservedUserLabel"
+                           FontSize="14"
+                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+                    <Label x:Name="ReservedAtLabel"
+                           FontSize="14"
+                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+                    <Label x:Name="CheckInAtLabel"
+                           FontSize="14"
+                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+                    <Label x:Name="ReservationReferenceLabel"
+                           FontSize="14"
+                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+                    <Label x:Name="PaymentReferenceLabel"
+                           FontSize="14"
+                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+                </VerticalStackLayout>
+            </Frame>
 
-            <Button x:Name="ManualCheckoutButton"
-                    Text="Done / Check Out"
-                    Clicked="ManualCheckout_Clicked"
-                    BackgroundColor="#DC2626"
-                    TextColor="White" />
+            <Label Text="Actions"
+                   FontSize="18"
+                   FontAttributes="Bold"
+                   TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
 
-            <Button x:Name="ScanArrivalQrButton"
-                    Text="Scan Arrival QR"
-                    Clicked="ScanArrivalQr_Clicked"
-                    BackgroundColor="#059669"
-                    TextColor="White" />
+            <Grid ColumnDefinitions="*,*"
+                  RowDefinitions="Auto,Auto,Auto"
+                  ColumnSpacing="12"
+                  RowSpacing="12">
 
-            <Button x:Name="ScanPaymentQrButton"
-                    Text="Scan Payment QR"
-                    Clicked="ScanPaymentQr_Clicked"
-                    BackgroundColor="#D97706"
-                    TextColor="White" />
+                <Button x:Name="ConfirmArrivalButton"
+                        Grid.Row="0"
+                        Grid.Column="0"
+                        Text="📍 Confirm Arrival"
+                        Clicked="ManualArrive_Clicked"
+                        BackgroundColor="#2563EB"
+                        TextColor="White"
+                        CornerRadius="14"
+                        HeightRequest="56"
+                        FontAttributes="Bold"
+                        Padding="14,0" />
+
+                <Button x:Name="ScanArrivalQrButton"
+                        Grid.Row="0"
+                        Grid.Column="1"
+                        Text="🔎 Scan Arrival QR"
+                        Clicked="ScanArrivalQr_Clicked"
+                        BackgroundColor="#059669"
+                        TextColor="White"
+                        CornerRadius="14"
+                        HeightRequest="56"
+                        FontAttributes="Bold"
+                        Padding="14,0" />
+
+                <Button x:Name="CashCheckoutButton"
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        Text="💵 Cash Payment"
+                        Clicked="CashCheckout_Clicked"
+                        BackgroundColor="#16A34A"
+                        TextColor="White"
+                        CornerRadius="14"
+                        HeightRequest="56"
+                        FontAttributes="Bold"
+                        Padding="14,0" />
+
+                <Button x:Name="OpenGcashButton"
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        Text="📲 Open GCash"
+                        Clicked="OpenGcash_Clicked"
+                        BackgroundColor="#D97706"
+                        TextColor="White"
+                        CornerRadius="14"
+                        HeightRequest="56"
+                        FontAttributes="Bold"
+                        Padding="14,0" />
+
+                <Button x:Name="ManualCheckoutButton"
+                        Grid.Row="2"
+                        Grid.ColumnSpan="2"
+                        Text="✅ Done / Check Out"
+                        Clicked="ManualCheckout_Clicked"
+                        BackgroundColor="#DC2626"
+                        TextColor="White"
+                        CornerRadius="14"
+                        HeightRequest="56"
+                        FontAttributes="Bold"
+                        Padding="14,0" />
+            </Grid>
+
+            <Frame CornerRadius="16"
+                   Padding="14"
+                   HasShadow="False"
+                   BackgroundColor="{AppThemeBinding Light=#F9FAFB, Dark=#111827}"
+                   BorderColor="{AppThemeBinding Light=#E5E7EB, Dark=#334155}">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="Guide"
+                           FontAttributes="Bold"
+                           FontSize="14"
+                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+                    <Label Text="• Cash: use Confirm Arrival, then Cash Payment"
+                           FontSize="13"
+                           TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+                    <Label Text="• GCash: use Confirm Arrival / Scan Arrival QR, then Open GCash and confirm payment"
+                           FontSize="13"
+                           TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+                    <Label Text="• Completed actions stay visible but become disabled"
+                           FontSize="13"
+                           TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+                </VerticalStackLayout>
+            </Frame>
 
         </VerticalStackLayout>
     </ScrollView>

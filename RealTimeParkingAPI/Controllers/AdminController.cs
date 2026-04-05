@@ -111,14 +111,20 @@ namespace RealTimeParkingAPI.Controllers
         [Authorize(Roles = "SuperAdmin")]
         public async Task<IActionResult> CreateLocationAdmin(CreateLocationAdminDto dto)
         {
+            if (string.IsNullOrWhiteSpace(dto.Password))
+                return BadRequest(new { message = "Password is required." });
+
+            if (dto.Password.Length < 6)
+                return BadRequest(new { message = "Password too weak." });
+
             var location = await _context.ParkingLocations.FindAsync(dto.ParkingLocationId);
             if (location == null)
                 return BadRequest(new { message = "Parking location not found." });
 
-            var existing = await _context.Users.FirstOrDefaultAsync(x =>
+            var exists = await _context.Users.AnyAsync(x =>
                 x.Username == dto.Username || x.Email == dto.Email);
 
-            if (existing != null)
+            if (exists)
                 return BadRequest(new { message = "Username or email already exists." });
 
             var user = new User

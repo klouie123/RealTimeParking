@@ -21,5 +21,7 @@ public partial class UserShell : Shell
         Routing.RegisterRoute(nameof(MyActiveParkingPage), typeof(MyActiveParkingPage));
         Routing.RegisterRoute(nameof(ParkingHistoryPage), typeof(ParkingHistoryPage));
         Routing.RegisterRoute(nameof(SettingsPage), typeof(SettingsPage));
+        Routing.RegisterRoute(nameof(WaitingPaymentConfirmationPage), typeof(WaitingPaymentConfirmationPage));
+        Routing.RegisterRoute(nameof(ReservationSuccessPage), typeof(ReservationSuccessPage));
     }
 }

@@ -47,6 +47,8 @@ namespace RealTimeParkingApp
             //builder.Services.AddTransient<ArrivalPage>();
             builder.Services.AddTransient<ParkingSlotsPage>();
             builder.Services.AddTransient<NavigationMapPage>();
+            builder.Services.AddTransient<WaitingPaymentConfirmationPage>();
+            builder.Services.AddTransient<ReservationSuccessPage>();
 
             builder.Services.AddTransient<SuperAdminDashboardPage>();
 

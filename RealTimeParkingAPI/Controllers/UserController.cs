@@ -48,6 +48,14 @@ namespace RealTimeParkingAPI.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Register([FromBody] RegisterUserDto dto)
         {
+            if (!IsStrongPassword(dto.Password))
+            {
+                return BadRequest(new
+                {
+                    message = "Password must be at least 8 characters, include uppercase, lowercase, number, and special character."
+                });
+            }
+
             if (await _context.Users.AnyAsync(u => u.Username == dto.Username))
                 return BadRequest(new { message = "Username already exists." });
 
@@ -63,7 +71,8 @@ namespace RealTimeParkingAPI.Controllers
                 Email = dto.Email,
                 PasswordHash = PasswordHelper.HashPassword(dto.Password),
                 Role = "User",
-                CreatedAt = DateTime.Now
+                CreatedAt = DateTime.Now,
+                IsEmailConfirmed = false
             };
 
             _context.Users.Add(user);
@@ -83,14 +92,25 @@ namespace RealTimeParkingAPI.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
         {
-            var hashedPassword = PasswordHelper.HashPassword(request.Password);
-
             var user = await _context.Users.FirstOrDefaultAsync(u =>
-                (u.Username == request.UsernameOrEmail || u.Email == request.UsernameOrEmail) &&
-                u.PasswordHash == hashedPassword);
+            u.Username == request.UsernameOrEmail || u.Email == request.UsernameOrEmail);
 
-            if (user == null)
+            if (user == null || !PasswordHelper.VerifyPassword(request.Password, user.PasswordHash))
                 return Unauthorized(new { message = "Invalid username/email or password." });
+
+            //var hashedPassword = PasswordHelper.HashPassword(request.Password);
+
+            //var user = await _context.Users.FirstOrDefaultAsync(u =>
+            //    (u.Username == request.UsernameOrEmail || u.Email == request.UsernameOrEmail) &&
+            //    u.PasswordHash == hashedPassword);
+
+            //if (user == null)
+            //    return Unauthorized(new { message = "Invalid username/email or password." });
+
+            if (!user.IsEmailConfirmed)
+            {
+                return Unauthorized(new { message = "Please confirm your email first." });
+            }
 
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.UTF8.GetBytes(_config["Jwt:Key"]!);
@@ -130,6 +150,15 @@ namespace RealTimeParkingAPI.Controllers
                 Role = user.Role,
                 ParkingLocationId = user.ParkingLocationId
             });
+        }
+
+        private bool IsStrongPassword(string password)
+        {
+            return password.Length >= 8 &&
+                   password.Any(char.IsUpper) &&
+                   password.Any(char.IsLower) &&
+                   password.Any(char.IsDigit) &&
+                   password.Any(ch => !char.IsLetterOrDigit(ch));
         }
     }
 }

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="RealTimeParkingApp.Views.WaitingPaymentConfirmationPage"
+             Title="Waiting Confirmation"
+             Shell.NavBarIsVisible="False"
+             Shell.TabBarIsVisible="False"
+             BackgroundColor="{AppThemeBinding Light=#F8F9FB, Dark=#0F172A}">
+
+    <Grid Padding="20">
+        <VerticalStackLayout VerticalOptions="Center" Spacing="18">
+
+            <Label Text="Waiting for Payment Confirmation"
+                   FontSize="24"
+                   FontAttributes="Bold"
+                   HorizontalTextAlignment="Center"
+                   TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+
+            <Label x:Name="MessageLabel"
+                   Text="Please wait while the location admin confirms your payment."
+                   FontSize="15"
+                   HorizontalTextAlignment="Center"
+                   TextColor="{AppThemeBinding Light=#6B7280, Dark=#CBD5E1}" />
+
+            <ActivityIndicator IsRunning="True"
+                               HorizontalOptions="Center" />
+
+            <Frame CornerRadius="16"
+                   Padding="16"
+                   HasShadow="False"
+                   BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
+                   BorderColor="{AppThemeBinding Light=#E5E7EB, Dark=#334155}">
+                <VerticalStackLayout Spacing="8">
+                    <Label x:Name="LocationLabel" FontSize="18" FontAttributes="Bold" />
+                    <Label x:Name="SlotLabel" FontSize="14" />
+                    <Label x:Name="StatusLabel" FontSize="14" />
+                    <Label x:Name="PaymentMethodLabel" FontSize="14" />
+                    <Label x:Name="AmountLabel" FontSize="14" />
+                </VerticalStackLayout>
+            </Frame>
+        </VerticalStackLayout>
+    </Grid>
+</ContentPage>

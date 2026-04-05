@@ -35,7 +35,7 @@ public partial class LocationAdminSlotDetailsPage : ContentPage
             return;
         }
 
-        await LoadAsync();
+        await LoadAsync(showError: true);
         StartAutoRefresh();
     }
 
@@ -64,7 +64,7 @@ public partial class LocationAdminSlotDetailsPage : ContentPage
                     MainThread.BeginInvokeOnMainThread(async () =>
                     {
                         if (!_isBusy)
-                            await LoadAsync(false);
+                            await LoadAsync();
                     });
                 }
             }
@@ -96,7 +96,7 @@ public partial class LocationAdminSlotDetailsPage : ContentPage
                 return;
             }
 
-            SlotCodeLabel.Text = $"Slot: {details.SlotCode}";
+            SlotCodeLabel.Text = $"Slot {details.SlotCode}";
             SlotStatusLabel.Text = $"Status: {details.Status}";
             ReservedUserLabel.Text = $"Reserved User: {details.ReservedUser ?? "None"}";
             ReservedAtLabel.Text = $"Reserved At: {FormatDate(details.ReservedAt)}";
@@ -117,7 +117,7 @@ public partial class LocationAdminSlotDetailsPage : ContentPage
 
     private void ApplyFallbackState()
     {
-        SlotCodeLabel.Text = $"Slot: {_slotId}";
+        SlotCodeLabel.Text = $"Slot {_slotId}";
         SlotStatusLabel.Text = "Status: Waiting for slot details";
         ReservedUserLabel.Text = "Reserved User: N/A";
         ReservedAtLabel.Text = "Reserved At: N/A";
@@ -125,57 +125,55 @@ public partial class LocationAdminSlotDetailsPage : ContentPage
         ReservationReferenceLabel.Text = "Reservation Ref: N/A";
         PaymentReferenceLabel.Text = "Payment Ref: N/A";
 
-        ConfirmArrivalButton.IsVisible = true;
-        CashCheckoutButton.IsVisible = false;
-        ManualCheckoutButton.IsVisible = false;
-        ScanArrivalQrButton.IsVisible = true;
-        ScanPaymentQrButton.IsVisible = false;
+        ConfirmArrivalButton.IsEnabled = true;
+        ScanArrivalQrButton.IsEnabled = true;
+        CashCheckoutButton.IsEnabled = false;
+        OpenGcashButton.IsEnabled = false;
+        ManualCheckoutButton.IsEnabled = false;
     }
 
     private void ApplyButtonState(AdminSlotDetailsModel details)
     {
-        var status = details.Status?.Trim() ?? string.Empty;
-        var paymentMethod = details.PaymentMethod?.Trim() ?? string.Empty;
+        string status = details.Status?.Trim() ?? string.Empty;
+        string paymentMethod = details.PaymentMethod?.Trim() ?? string.Empty;
 
         bool isReserved = status.Equals("Reserved", StringComparison.OrdinalIgnoreCase);
         bool isOccupied = status.Equals("Occupied", StringComparison.OrdinalIgnoreCase);
         bool isCompleted = status.Equals("Completed", StringComparison.OrdinalIgnoreCase);
+        bool isPendingCash = status.Equals("PendingCashConfirmation", StringComparison.OrdinalIgnoreCase);
+        bool isPendingGcash = status.Equals("PendingGcashConfirmation", StringComparison.OrdinalIgnoreCase);
+
         bool isCash = paymentMethod.Equals("Cash", StringComparison.OrdinalIgnoreCase);
         bool isGcash = paymentMethod.Equals("GCash", StringComparison.OrdinalIgnoreCase);
 
+        bool hasArrivalQr = !string.IsNullOrWhiteSpace(details.ReservationReference);
+        bool hasCheckedIn = details.CheckInAt.HasValue;
+
+        ConfirmArrivalButton.IsEnabled = false;
+        ScanArrivalQrButton.IsEnabled = false;
+        CashCheckoutButton.IsEnabled = false;
+        OpenGcashButton.IsEnabled = false;
+        ManualCheckoutButton.IsEnabled = false;
+
         if (isCompleted)
-        {
-            ConfirmArrivalButton.IsVisible = false;
-            CashCheckoutButton.IsVisible = false;
-            ManualCheckoutButton.IsVisible = false;
-            ScanArrivalQrButton.IsVisible = false;
-            ScanPaymentQrButton.IsVisible = false;
             return;
+
+        if (isReserved && !hasCheckedIn)
+        {
+            ConfirmArrivalButton.IsEnabled = true;
+            ScanArrivalQrButton.IsEnabled = hasArrivalQr;
         }
 
-        ConfirmArrivalButton.IsVisible = isReserved;
+        if (isCash && (isOccupied || isPendingCash))
+        {
+            CashCheckoutButton.IsEnabled = true;
+            ManualCheckoutButton.IsEnabled = true;
+        }
 
-        if (isCash)
+        if (isGcash && (isOccupied || isPendingGcash))
         {
-            ScanArrivalQrButton.IsVisible = false;
-            ScanPaymentQrButton.IsVisible = false;
-            ManualCheckoutButton.IsVisible = false;
-            CashCheckoutButton.IsVisible = isOccupied || isReserved;
-        }
-        else if (isGcash)
-        {
-            CashCheckoutButton.IsVisible = false;
-            ManualCheckoutButton.IsVisible = false;
-            ScanArrivalQrButton.IsVisible = isReserved && !string.IsNullOrWhiteSpace(details.ReservationReference);
-            ScanPaymentQrButton.IsVisible = isOccupied && !string.IsNullOrWhiteSpace(details.PaymentReference);
-        }
-        else
-        {
-            // fallback kung walang payment method na bumalik
-            CashCheckoutButton.IsVisible = isOccupied;
-            ScanArrivalQrButton.IsVisible = isReserved && !string.IsNullOrWhiteSpace(details.ReservationReference);
-            ScanPaymentQrButton.IsVisible = isOccupied && !string.IsNullOrWhiteSpace(details.PaymentReference);
-            ManualCheckoutButton.IsVisible = false;
+            OpenGcashButton.IsEnabled = true;
+            ManualCheckoutButton.IsEnabled = true;
         }
     }
 
@@ -192,7 +190,6 @@ public partial class LocationAdminSlotDetailsPage : ContentPage
             ConfirmArrivalButton.IsEnabled = false;
 
             var result = await _apiService.ManualArriveAsync(_slotId);
-
             bool isSuccess = result?.Success == true;
 
             await DisplayAlert(
@@ -200,11 +197,14 @@ public partial class LocationAdminSlotDetailsPage : ContentPage
                 result?.Message ?? (isSuccess ? "Arrival confirmed." : "Failed."),
                 "OK");
 
-            await LoadAsync();
+            await LoadAsync(showError: true);
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Error", ex.Message, "OK");
         }
         finally
         {
-            ConfirmArrivalButton.IsEnabled = true;
             _isBusy = false;
         }
     }
@@ -221,22 +221,24 @@ public partial class LocationAdminSlotDetailsPage : ContentPage
 
             await DisplayAlert(
                 isSuccess ? "Success" : "Error",
-                result?.Message ?? (isSuccess ? "Cash checkout successful." : "Cash checkout failed."),
+                result?.Message ?? (isSuccess ? "Cash payment confirmed." : "Cash payment failed."),
                 "OK");
 
             if (isSuccess)
             {
                 StopAutoRefresh();
                 await Shell.Current.GoToAsync("..");
+                return;
             }
-            else
-            {
-                await LoadAsync();
-            }
+
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Error", ex.Message, "OK");
         }
         finally
         {
-            CashCheckoutButton.IsEnabled = true;
             _isBusy = false;
         }
     }
@@ -253,22 +255,64 @@ public partial class LocationAdminSlotDetailsPage : ContentPage
 
             await DisplayAlert(
                 isSuccess ? "Success" : "Error",
-                result?.Message ?? (isSuccess ? "Checkout successful." : "Failed."),
+                result?.Message ?? (isSuccess ? "Checkout successful." : "Checkout failed."),
                 "OK");
 
             if (isSuccess)
             {
                 StopAutoRefresh();
                 await Shell.Current.GoToAsync("..");
+                return;
             }
-            else
-            {
-                await LoadAsync();
-            }
+
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Error", ex.Message, "OK");
         }
         finally
         {
-            ManualCheckoutButton.IsEnabled = true;
+            _isBusy = false;
+        }
+    }
+
+    private async void OpenGcash_Clicked(object sender, EventArgs e)
+    {
+        try
+        {
+            _isBusy = true;
+            OpenGcashButton.IsEnabled = false;
+
+            bool open = await DisplayAlert(
+                "Open GCash",
+                "You will be redirected to GCash to complete your payment.",
+                "Continue",
+                "Cancel");
+
+            if (!open)
+                return;
+
+            var gcashUri = new Uri("gcash://");
+
+            if (await Launcher.Default.CanOpenAsync(gcashUri))
+            {
+                await Launcher.Default.OpenAsync(gcashUri);
+            }
+            else
+            {
+                await Launcher.Default.OpenAsync("https://www.gcash.com");
+            }
+
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Error", ex.Message, "OK");
+        }
+        finally
+        {
+            OpenGcashButton.IsEnabled = true;
             _isBusy = false;
         }
     }
@@ -277,11 +321,5 @@ public partial class LocationAdminSlotDetailsPage : ContentPage
     {
         StopAutoRefresh();
         await Shell.Current.GoToAsync($"{nameof(AdminQrScannerPage)}?mode=arrival&slotId={_slotId}");
-    }
-
-    private async void ScanPaymentQr_Clicked(object sender, EventArgs e)
-    {
-        StopAutoRefresh();
-        await Shell.Current.GoToAsync($"{nameof(AdminQrScannerPage)}?mode=payment&slotId={_slotId}");
     }
 }
