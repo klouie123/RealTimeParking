@@ -1,3 +1,4 @@
+using RealTimeParkingApp.DTOs;
 using RealTimeParkingApp.Models;
 using RealTimeParkingApp.Services;
 using RealTimeParkingApp.Shells;
@@ -28,49 +29,31 @@ public partial class RegisterPage : ContentPage
                 return;
             }
 
-            var user = new User
+            var dto = new RegisterRequestDto
             {
                 Username = UsernameEntry.Text.Trim(),
                 FirstName = FirstNameEntry.Text.Trim(),
                 MiddleName = MiddleNameEntry.Text?.Trim(),
                 LastName = LastNameEntry.Text.Trim(),
                 Email = EmailEntry.Text.Trim(),
-                PasswordHash = PasswordEntry.Text,
-                Role = "User"
+                Password = PasswordEntry.Text
             };
 
-            var success = await _apiService.Register(user);
+            var result = await _apiService.RegisterAsync(dto);
 
-            if (!success)
+            if (!result.Success)
             {
-                await DisplayAlert("Error", "Username or Email already exists.", "OK");
+                await DisplayAlert("Error", result.Message, "OK");
                 return;
             }
 
-            var loginResponse = await _apiService.Login(user.Username, user.PasswordHash);
+            await DisplayAlert("Success", "Account created. Please confirm your email first.", "OK");
 
-            if (loginResponse != null && loginResponse.IsSuccess)
-            {
-                Preferences.Set("jwt_token", loginResponse.Token ?? string.Empty);
-                Preferences.Set("user_role", loginResponse.Role ?? string.Empty);
-                Preferences.Set("user_id", loginResponse.UserId);
-                Preferences.Set("username", loginResponse.Username ?? user.Username ?? "");
-                Preferences.Set("email", loginResponse.Email ?? user.Email ?? "");
-
-                await DisplayAlert("Success", "Account created and logged in!", "OK");
-
-                Application.Current!.MainPage =
-                    App.Services.GetRequiredService<UserShell>();
-            }
-            else
-            {
-                await DisplayAlert("Info", "Account created, but automatic login failed. Please log in manually.", "OK");
-                await Navigation.PopAsync();
-            }
+            await Navigation.PushAsync(new EmailConfirmationPage(dto.Email, dto.Password));
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Error", ex.ToString(), "OK");
+            await DisplayAlert("Error", ex.Message, "OK");
         }
     }
 }

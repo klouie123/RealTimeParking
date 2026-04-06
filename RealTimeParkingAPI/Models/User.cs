@@ -12,7 +12,9 @@
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public string Role { get; set; } = "User";
 
-        public bool IsEmailConfirmed { get; set; }
+        public bool IsEmailConfirmed { get; set; } = false;
+        public string? EmailConfirmationCode { get; set; }
+        public DateTime? EmailConfirmationCodeExpiresAt { get; set; }
 
         // NULL for SuperAdmin or normal User
         public int? ParkingLocationId { get; set; }

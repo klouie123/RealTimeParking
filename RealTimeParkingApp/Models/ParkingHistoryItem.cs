@@ -14,6 +14,8 @@ namespace RealTimeParkingApp.Models
         public DateTime ReservedAt { get; set; }
         public DateTime? CheckInAt { get; set; }
         public DateTime? CheckOutAt { get; set; }
+        public string? PaymentMethod { get; set; }
+        public string? PaymentStatus { get; set; }
         public decimal PaymentAmount { get; set; }
         public string Status { get; set; } = string.Empty;
     }

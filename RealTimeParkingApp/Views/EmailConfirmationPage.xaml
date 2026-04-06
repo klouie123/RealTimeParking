@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="RealTimeParkingApp.Views.EmailConfirmationPage"
+             Title="Email Confirmation"
+             BackgroundColor="{AppThemeBinding Light=#F8F9FB, Dark=#0F172A}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="18">
+
+            <VerticalStackLayout Spacing="4">
+                <Label Text="Confirm Your Email"
+                       FontSize="26"
+                       FontAttributes="Bold"
+                       TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                       HorizontalOptions="Center" />
+
+                <Label x:Name="EmailLabel"
+                       Text="We sent a code to your email"
+                       FontSize="13"
+                       TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}"
+                       HorizontalOptions="Center" />
+            </VerticalStackLayout>
+
+            <Frame CornerRadius="16"
+                   Padding="18"
+                   HasShadow="False"
+                   BackgroundColor="{AppThemeBinding Light=White, Dark=#1E293B}"
+                   BorderColor="{AppThemeBinding Light=#E5E7EB, Dark=#334155}">
+
+                <VerticalStackLayout Spacing="14">
+
+                    <Entry x:Name="CodeEntry"
+                           Placeholder="Enter 6-digit code"
+                           Keyboard="Numeric"
+                           MaxLength="6"
+                           BackgroundColor="{AppThemeBinding Light=#F9FAFB, Dark=#111827}"
+                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                           PlaceholderColor="{AppThemeBinding Light=#9CA3AF, Dark=#94A3B8}" />
+
+                    <Button Text="Verify Email"
+                            Clicked="VerifyButton_Clicked"
+                            BackgroundColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                            TextColor="{AppThemeBinding Light=White, Dark=#111827}"
+                            CornerRadius="12"
+                            HeightRequest="48" />
+
+                    <Button Text="Resend Code"
+                            Clicked="ResendButton_Clicked"
+                            BackgroundColor="Transparent"
+                            TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                            BorderColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                            BorderWidth="1"
+                            CornerRadius="12"
+                            HeightRequest="48" />
+                </VerticalStackLayout>
+            </Frame>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

@@ -96,6 +96,85 @@ namespace RealTimeParkingApp.Services
             }
         }
 
+        public async Task<(bool Success, string Message)> RegisterAsync(RegisterRequestDto dto)
+        {
+            try
+            {
+                var json = JsonConvert.SerializeObject(dto);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PostAsync("user/register", content);
+                var responseText = await response.Content.ReadAsStringAsync();
+
+                System.Diagnostics.Debug.WriteLine($"RegisterAsync status: {response.StatusCode}");
+                System.Diagnostics.Debug.WriteLine($"RegisterAsync body: {responseText}");
+
+                if (response.IsSuccessStatusCode)
+                    return (true, "Registration successful. Please confirm your email.");
+
+                return (false, responseText);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"RegisterAsync error: {ex}");
+                return (false, ex.Message);
+            }
+        }
+
+        public async Task<(bool Success, string Message, string? DebugCode)> SendConfirmationCodeAsync(string email)
+        {
+            try
+            {
+                var content = new StringContent(
+                    Newtonsoft.Json.JsonConvert.SerializeObject(new { email }),
+                    Encoding.UTF8,
+                    "application/json");
+
+                var response = await _httpClient.PostAsync("user/send-confirmation-code", content);
+                var body = await response.Content.ReadAsStringAsync();
+
+                System.Diagnostics.Debug.WriteLine($"SendConfirmationCodeAsync status: {response.StatusCode}");
+                System.Diagnostics.Debug.WriteLine($"SendConfirmationCodeAsync body: {body}");
+
+                if (!response.IsSuccessStatusCode)
+                    return (false, body, null);
+
+                var result = Newtonsoft.Json.JsonConvert.DeserializeObject<SendCodeResponse>(body);
+
+                return (true, result?.Message ?? "Confirmation code sent.", result?.DebugCode);
+            }
+            catch (Exception ex)
+            {
+                return (false, ex.Message, null);
+            }
+        }
+
+        public async Task<(bool Success, string Message)> VerifyEmailCodeAsync(string email, string code)
+        {
+            try
+            {
+                var content = new StringContent(
+                    Newtonsoft.Json.JsonConvert.SerializeObject(new { email, code }),
+                    Encoding.UTF8,
+                    "application/json");
+
+                var response = await _httpClient.PostAsync("user/verify-email-code", content);
+                var body = await response.Content.ReadAsStringAsync();
+
+                System.Diagnostics.Debug.WriteLine($"VerifyEmailCodeAsync status: {response.StatusCode}");
+                System.Diagnostics.Debug.WriteLine($"VerifyEmailCodeAsync body: {body}");
+
+                if (response.IsSuccessStatusCode)
+                    return (true, "Email confirmed successfully.");
+
+                return (false, body);
+            }
+            catch (Exception ex)
+            {
+                return (false, ex.Message);
+            }
+        }
+
         public async Task<bool> Register(User user)
         {
             try

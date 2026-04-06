@@ -40,27 +40,30 @@ public partial class ReservationSuccessPage : ContentPage
     {
         try
         {
-            var activeParking = await _apiService.GetMyActiveParkingAsync();
+            var history = await _apiService.GetParkingHistoryAsync();
 
-            if (activeParking != null)
+            var latest = history?.FirstOrDefault();
+
+            if (latest != null)
             {
-                LocationLabel.Text = $"Location: {activeParking.ParkingLocationName}";
-                SlotLabel.Text = $"Slot: {activeParking.SlotCode}";
-                ReservationReferenceLabel.Text = $"Reservation Ref: {activeParking.ReservationReference}";
-                PaymentReferenceLabel.Text = $"Payment Ref: {activeParking.PaymentReference ?? "N/A"}";
-                PaymentMethodLabel.Text = $"Payment Method: {activeParking.PaymentMethod ?? "N/A"}";
-                AmountLabel.Text = $"Amount Paid: ₱{activeParking.PaymentAmount:F2}";
-                StatusLabel.Text = $"Status: {activeParking.PaymentStatus ?? activeParking.Status}";
-                return;
+                LocationLabel.Text = $"Location: {latest.ParkingLocationName}";
+                SlotLabel.Text = $"Slot: {latest.SlotCode}";
+                ReservationReferenceLabel.Text = $"Reservation Ref: {latest.ReservationReference}";
+                PaymentReferenceLabel.Text = $"Payment Ref: {latest.PaymentReference ?? "N/A"}";
+                PaymentMethodLabel.Text = $"Payment Method: {latest.PaymentMethod}";
+                AmountLabel.Text = $"Amount Paid: ₱{latest.PaymentAmount:F2}";
+                StatusLabel.Text = $"Status: {latest.PaymentStatus}";
             }
-
-            LocationLabel.Text = "Location: Payment completed";
-            SlotLabel.Text = "Slot: Completed";
-            ReservationReferenceLabel.Text = $"Reservation Id: {_reservationId}";
-            PaymentReferenceLabel.Text = "Payment Ref: Confirmed";
-            PaymentMethodLabel.Text = "Payment Method: Completed";
-            AmountLabel.Text = "Amount Paid: Confirmed";
-            StatusLabel.Text = "Status: Paid";
+            else
+            {
+                LocationLabel.Text = "Location: N/A";
+                SlotLabel.Text = "Slot: N/A";
+                ReservationReferenceLabel.Text = "Reservation Ref: N/A";
+                PaymentReferenceLabel.Text = "Payment Ref: N/A";
+                PaymentMethodLabel.Text = "Payment Method: N/A";
+                AmountLabel.Text = "Amount Paid: N/A";
+                StatusLabel.Text = "Status: Completed";
+            }
         }
         catch (Exception ex)
         {

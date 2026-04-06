@@ -1,7 +1,4 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -9,6 +6,10 @@ using RealTimeParkingAPI.Data;
 using RealTimeParkingAPI.DTOs;
 using RealTimeParkingAPI.Helpers;
 using RealTimeParkingAPI.Models;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using RealTimeParkingAPI.Services;
 
 namespace RealTimeParkingAPI.Controllers
 {
@@ -18,11 +19,13 @@ namespace RealTimeParkingAPI.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IConfiguration _config;
+        private readonly IEmailService _emailService;
 
-        public UserController(AppDbContext context, IConfiguration config)
+        public UserController(AppDbContext context, IConfiguration config, IEmailService emailService)
         {
             _context = context;
             _config = config;
+            _emailService = emailService;
         }
 
         [HttpGet]
@@ -150,6 +153,72 @@ namespace RealTimeParkingAPI.Controllers
                 Role = user.Role,
                 ParkingLocationId = user.ParkingLocationId
             });
+        }
+
+        [HttpPost("send-confirmation-code")]
+        [AllowAnonymous]
+        public async Task<IActionResult> SendConfirmationCode([FromBody] SendConfirmationCodeDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.Email))
+                return BadRequest(new { message = "Email is required." });
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == dto.Email);
+            if (user == null)
+                return NotFound(new { message = "User not found." });
+
+            var code = Random.Shared.Next(100000, 999999).ToString();
+
+            user.EmailConfirmationCode = code;
+            user.EmailConfirmationCodeExpiresAt = DateTime.UtcNow.AddMinutes(10);
+
+            await _context.SaveChangesAsync();
+
+            Console.WriteLine($"[EMAIL VERIFY CODE] {user.Email} => {code}");
+
+            return Ok(new
+            {
+                message = "Confirmation code generated successfully.",
+                debugCode = code
+            });
+        }
+
+        [HttpPost("verify-email-code")]
+        [AllowAnonymous]
+        public async Task<IActionResult> VerifyEmailCode([FromBody] VerifyEmailCodeDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.Code))
+                return BadRequest(new { message = "Email and code are required." });
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == dto.Email);
+            if (user == null)
+                return NotFound(new { message = "User not found." });
+
+            if (user.IsEmailConfirmed)
+                return Ok(new { message = "Email already confirmed." });
+
+            if (user.EmailConfirmationCode != dto.Code)
+                return BadRequest(new { message = "Invalid confirmation code." });
+
+            if (user.EmailConfirmationCodeExpiresAt == null ||
+                user.EmailConfirmationCodeExpiresAt < DateTime.UtcNow)
+            {
+                return BadRequest(new { message = "Confirmation code expired." });
+            }
+
+            user.IsEmailConfirmed = true;
+            user.EmailConfirmationCode = null;
+            user.EmailConfirmationCodeExpiresAt = null;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Email confirmed successfully." });
+        }
+
+        [HttpPost("resend-confirmation-code")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ResendConfirmationCode([FromBody] SendConfirmationCodeDto dto)
+        {
+            return await SendConfirmationCode(dto);
         }
 
         private bool IsStrongPassword(string password)

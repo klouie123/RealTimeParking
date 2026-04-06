@@ -328,6 +328,11 @@ namespace RealTimeParkingAPI.Controllers
                 });
             }
 
+            if (string.IsNullOrWhiteSpace(reservation.PaymentReference))
+            {
+                reservation.PaymentReference = $"CASH-{DateTime.UtcNow:yyyyMMddHHmmss}-{reservation.Id}";
+            }
+
             reservation.CheckOutAt = DateTime.UtcNow;
             reservation.PaidAt = DateTime.UtcNow;
             reservation.Status = "Completed";
