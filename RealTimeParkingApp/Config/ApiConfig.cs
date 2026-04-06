@@ -9,7 +9,7 @@ namespace RealTimeParkingApp.Config
             get
             {
 #if ANDROID
-                bool useNgrok = false;
+                bool useNgrok = true;
 
                 // PRIORITY 1: Emulator
                 if (DeviceInfo.DeviceType == DeviceType.Virtual)
@@ -24,8 +24,8 @@ namespace RealTimeParkingApp.Config
                 }
 
                 // PRIORITY 3: local IP fallback
-                //return "http://10.64.61.219:6060/api/";
-                return "http://192.168.1.20:6060/api/";
+                return "http://10.20.255.219:6060/api/";
+                //return "http://192.168.1.20:6060/api/";
 
 #else
                 return "http://localhost:6060/api/";
